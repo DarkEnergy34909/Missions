@@ -2,6 +2,7 @@ package com.example.missions
 
 import android.widget.CheckBox
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ThumbUp
@@ -32,6 +34,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,11 +47,27 @@ import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.missions.data.DataSource
 import com.example.missions.ui.theme.MissionsTheme
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import kotlin.random.Random
 
+enum class MissionStates() {
+    MISSION_UNDEFINED,
+    MISSION_COMPLETED,
+    MISSION_FAILED
+}
 
 @Composable
 fun MissionScreen(modifier: Modifier = Modifier) {
+    var missionState by remember {mutableStateOf(MissionStates.MISSION_UNDEFINED.ordinal)}
+
+    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val date = Calendar.getInstance().time
+    val dateInString = dateFormatter.format(date)
 
     Scaffold(
         topBar = {
@@ -59,7 +81,7 @@ fun MissionScreen(modifier: Modifier = Modifier) {
     ) {innerPadding ->
         Column(
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.End,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -67,10 +89,19 @@ fun MissionScreen(modifier: Modifier = Modifier) {
             //MenuBar()
 
             //Spacer(modifier = Modifier.size(256.dp))
+            if (missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
+                Streak(0);
 
-            MissionCard("Talk to a stranger today.")
+                MissionCard(DataSource.missions[Random.nextInt(0, DataSource.missions.size)], dateInString)
 
-            SuccessFailureButtons()
+                SuccessFailureButtons(
+                    onFailButtonPressed = {missionState = MissionStates.MISSION_FAILED.ordinal},
+                    onSuccessButtonPressed = {missionState = MissionStates.MISSION_COMPLETED.ordinal}
+                )
+            }
+            else if (missionState == MissionStates.MISSION_COMPLETED.ordinal) {
+
+            }
 
 
         }
@@ -86,7 +117,7 @@ fun MissionAppBar(
 ) {
     CenterAlignedTopAppBar(
         title = {
-            Text(text = "Talkative.")
+            Text(text = "Missions")
         },
         //colors = ,
         modifier = modifier,
@@ -140,7 +171,11 @@ fun ActionButton(
 }
 
 @Composable
-fun SuccessFailureButtons(modifier: Modifier = Modifier) {
+fun SuccessFailureButtons(
+    onFailButtonPressed: () -> Unit,
+    onSuccessButtonPressed: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
@@ -151,20 +186,22 @@ fun SuccessFailureButtons(modifier: Modifier = Modifier) {
 
         ActionButton(
             imageVector = Icons.Filled.Close,
-            onClick = {},
+            onClick = onFailButtonPressed,
             color = Color.Red,
             modifier = Modifier
                 .weight(1f)
+                .animateContentSize()
         )
 
         Spacer(modifier = Modifier.weight(2f))
 
         ActionButton(
             imageVector = Icons.Filled.Check,
-            onClick = {},
+            onClick = onSuccessButtonPressed,
             color = Color.Green,
             modifier = Modifier
                 .weight(1f)
+                .animateContentSize()
         )
 
         Spacer(modifier = Modifier.weight(0.5f))
@@ -211,8 +248,7 @@ fun MenuBar(modifier: Modifier = Modifier) {
 @Composable
 fun MissionCard(
     missionText: String,
-    missionNumber: Int = 0,
-    dayNumber: Int = 0,
+    date: String,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -222,6 +258,7 @@ fun MissionCard(
         modifier = modifier
             .fillMaxWidth()
             .padding(dimensionResource(R.dimen.padding_medium))
+            .animateContentSize()
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -235,7 +272,7 @@ fun MissionCard(
 
             ) {
                 Text(
-                    text = "08/07/2024",
+                    text = date,
                     /* TODO style = ... */
                     textAlign = TextAlign.Start,
                     modifier = Modifier
@@ -261,6 +298,31 @@ fun MissionCard(
             )
         }
     }
+}
+
+@Composable
+fun Streak(
+    days: Int = 0,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        horizontalArrangement = Arrangement.End,
+        modifier = Modifier.padding(dimensionResource(R.dimen.padding_medium))
+    ) {
+        Icon(
+            imageVector = Icons.Filled.LocalFireDepartment,
+            contentDescription = "Streak"
+        )
+        
+        Text(
+            text = days.toString()
+        )
+    }
+}
+
+@Composable
+fun MissionCompleteScreen(modifier: Modifier = Modifier) {
+
 }
 
 
