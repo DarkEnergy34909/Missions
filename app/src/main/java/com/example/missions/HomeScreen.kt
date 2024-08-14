@@ -91,7 +91,7 @@ fun MissionScreen(
 ) {
     var missionState by remember {mutableStateOf(MissionStates.MISSION_UNDEFINED.ordinal)}
 
-    val currentMission: Mission = DataSource.missions[Random.nextInt(0, DataSource.missions.size)]
+    val currentMission by remember {mutableStateOf(DataSource.missions[Random.nextInt(0, DataSource.missions.size)])}
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentScreen = MissionScreens.valueOf(
