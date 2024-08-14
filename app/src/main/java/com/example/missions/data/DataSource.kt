@@ -7,9 +7,9 @@ object DataSource {
         "Have a wee today."
     )*/
     val missions = listOf<Mission>(
-        Mission("Talk to a stranger today.", "Easy"),
-        Mission("Take a massive dump today.", "Medium"),
-        Mission("Have a wee today.", "Hard")
+        Mission(text = "Talk to a stranger today.", difficulty = "Easy"),
+        Mission(text = "Take a massive dump today.", difficulty = "Medium"),
+        Mission(text = "Have a wee today.", difficulty = "Hard")
     )
     val difficulties = listOf<String>(
         "Easy",

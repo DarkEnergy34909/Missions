@@ -26,6 +26,7 @@ fun HistoryScreen(
             MissionCard(
                 mission = mission,
                 date = if (mission.completed == false) {"Failed: "} else {"Completed: "}, // TODO: Implement date
+                previous = true,
                 modifier = Modifier
             )
         }

@@ -129,7 +129,7 @@ fun MissionScreen(
                 )
             }
             composable(route = MissionScreens.Add.name) {
-                //AddScreen() TODO: Add screen
+                AddScreen(contentPadding = innerPadding)
             }
             composable(route = MissionScreens.History.name) {
                 HistoryScreen(
@@ -181,6 +181,7 @@ fun HomeScreen(
             MissionCard(
                 mission = currentMission  /*DataSource.missions[Random.nextInt(0, DataSource.missions.size)]*/,
                 date = dateInString,
+                previous = false
             )
 
             SuccessFailureButtons(
@@ -235,7 +236,7 @@ fun MissionAppBar(
                     //contentDescription = "Settings"
                 //)
             //}
-            Streak(1)
+            Streak(32)
         }
     );
 }
@@ -443,11 +444,12 @@ fun MissionCard(
     //missionDifficulty: Int,
     mission: Mission,
     date: String,
+    previous: Boolean,
     modifier: Modifier = Modifier
 ) {
     Card(
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+                containerColor =  if (!previous) {MaterialTheme.colorScheme.surfaceVariant} else {if(mission.completed) {Color.Green} else {MaterialTheme.colorScheme.errorContainer}},
         ),
         modifier = modifier
             .fillMaxWidth()
@@ -526,12 +528,12 @@ fun Streak(
         Icon(
             imageVector = Icons.Filled.LocalFireDepartment,
             contentDescription = "Streak",
-            tint = if (days == 0) {Color.Unspecified} else {Color(0xFFFFA500)}
+            tint = if (days == 0) {MaterialTheme.colorScheme.onPrimaryContainer} else {Color(0xFFFFA500)}
         )
         
         Text(
             text = days.toString(),
-            color = if (days == 0) {Color.Unspecified} else {Color(0xFFFFA500)},
+            color = if (days == 0) {MaterialTheme.colorScheme.onPrimaryContainer} else {Color(0xFFFFA500)},
         )
     }
 }
@@ -543,6 +545,12 @@ fun MissionCompleteScreen(modifier: Modifier = Modifier) {
     ) {
         Text(text = "Challenge completed!");
 
+        Spacer(modifier = Modifier.height(32.dp));
+
+        Text(text = "Your streak has been increased to x days.");
+
+        Spacer(modifier = Modifier.height(32.dp));
+
         Text(text = "Come back tomorrow for the next challenge.");
     }
 }
@@ -552,9 +560,15 @@ fun MissionFailedScreen(modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(text = "Challenge failed!");
+        Text(text = "Challenge failed!", textAlign = TextAlign.Center);
 
-        Text(text = "Come back tomorrow for the next challenge.");
+        Spacer(modifier = Modifier.height(32.dp));
+
+        Text(text = "Your streak has been reset. You can use a streak saver to preserve your streak.", textAlign = TextAlign.Center);
+
+        Spacer(modifier = Modifier.height(32.dp));
+
+        Text(text = "Come back tomorrow for the next challenge.", textAlign = TextAlign.Center);
 
         // Text(text = "You can do it!"); AI generated!!!!
     }
@@ -580,7 +594,7 @@ fun ConfirmationDialog(
 @Preview
 @Composable
 fun MissionCardPreview() {
-    MissionsTheme(darkTheme = true) {
+    MissionsTheme(darkTheme = false) {
         MissionScreen()
     }
 }
