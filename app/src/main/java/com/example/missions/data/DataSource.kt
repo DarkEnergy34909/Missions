@@ -6,4 +6,9 @@ object DataSource {
         "Take a massive dump today.",
         "Have a wee today."
     )
+    val difficulties = listOf<String>(
+        "Easy",
+        "Medium",
+        "Hard"
+    )
 }

@@ -6,21 +6,30 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreHoriz
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.BasicAlertDialog
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
@@ -47,6 +56,7 @@ import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.missions.data.DataSource
 import com.example.missions.ui.theme.MissionsTheme
 import java.text.SimpleDateFormat
@@ -59,6 +69,12 @@ enum class MissionStates() {
     MISSION_UNDEFINED,
     MISSION_COMPLETED,
     MISSION_FAILED
+}
+
+enum class MissionDifficulties() {
+    EASY,
+    MEDIUM,
+    HARD
 }
 
 @Composable
@@ -75,13 +91,16 @@ fun MissionScreen(modifier: Modifier = Modifier) {
                 canNavigateBack = false,
             )
         },
+        bottomBar = {
+            NavigationBar()
+        },
         modifier = modifier
             .statusBarsPadding()
             .padding(dimensionResource(R.dimen.padding_small))
     ) {innerPadding ->
         Column(
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.End,
+            horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
@@ -90,9 +109,13 @@ fun MissionScreen(modifier: Modifier = Modifier) {
 
             //Spacer(modifier = Modifier.size(256.dp))
             if (missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
-                Streak(0);
+                Streak(1);
 
-                MissionCard(DataSource.missions[Random.nextInt(0, DataSource.missions.size)], dateInString)
+                MissionCard(
+                    missionText = DataSource.missions[Random.nextInt(0, DataSource.missions.size)],
+                    date = dateInString,
+                    missionDifficulty = 2
+                )
 
                 SuccessFailureButtons(
                     onFailButtonPressed = {missionState = MissionStates.MISSION_FAILED.ordinal},
@@ -100,9 +123,11 @@ fun MissionScreen(modifier: Modifier = Modifier) {
                 )
             }
             else if (missionState == MissionStates.MISSION_COMPLETED.ordinal) {
-
+                MissionCompleteScreen()
             }
-
+            else {
+                MissionFailedScreen()
+            }
 
         }
     }
@@ -117,7 +142,7 @@ fun MissionAppBar(
 ) {
     CenterAlignedTopAppBar(
         title = {
-            Text(text = "Missions")
+            Text(text = "Challenges")
         },
         //colors = ,
         modifier = modifier,
@@ -148,6 +173,100 @@ fun MissionAppBar(
             }
         }
     );
+}
+
+@Composable
+fun NavigationBar(modifier: Modifier = Modifier) {
+    BottomAppBar(
+        actions = {
+
+            IconButton(
+                onClick = {},
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Home,
+                        contentDescription = "Home",
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "Home",
+                        fontSize = 12.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+
+
+            }
+
+            IconButton(
+                onClick = {},
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Add,
+                        contentDescription = "Add",
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "Add",
+                        fontSize = 12.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = {},
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Checklist,
+                        contentDescription = "History",
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "History",
+                        fontSize = 12.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+
+            IconButton(
+                onClick = {},
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.MoreHoriz,
+                        contentDescription = "More",
+                        modifier = Modifier.weight(1f)
+
+                    )
+                    Text(
+                        text = "More",
+                        fontSize = 12.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+        },
+        contentPadding = PaddingValues(0.dp),
+        modifier = Modifier
+            .height(80.dp)
+    )
 }
 
 @Composable
@@ -249,6 +368,7 @@ fun MenuBar(modifier: Modifier = Modifier) {
 fun MissionCard(
     missionText: String,
     date: String,
+    missionDifficulty: Int,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -281,13 +401,26 @@ fun MissionCard(
                 )
 
 
-                /*Text(
-                    text = "PEE",
+                Text(
+                    text = "Difficulty:",
                     textAlign = TextAlign.End,
                     modifier = Modifier
                         .weight(1f)
                         .padding(start = dimensionResource(R.dimen.padding_small), end = dimensionResource(R.dimen.padding_small))
-                )*/
+                )
+                Text(
+                    text = DataSource.difficulties[missionDifficulty],
+                    textAlign = TextAlign.End,
+                    color = when (missionDifficulty) {
+                        MissionDifficulties.EASY.ordinal -> Color.Green
+                        MissionDifficulties.MEDIUM.ordinal -> Color.Yellow
+                        MissionDifficulties.HARD.ordinal -> Color.Red
+                        else -> Color.Unspecified
+                    },
+                    modifier = Modifier
+                        //.weight(1f)
+                        .padding(/*start = dimensionResource(R.dimen.padding_small), */end = dimensionResource(R.dimen.padding_small))
+                )
 
             }
             Text(
@@ -307,21 +440,59 @@ fun Streak(
 ) {
     Row(
         horizontalArrangement = Arrangement.End,
-        modifier = Modifier.padding(dimensionResource(R.dimen.padding_medium))
+        modifier = Modifier
+            .padding(dimensionResource(R.dimen.padding_medium))
     ) {
         Icon(
             imageVector = Icons.Filled.LocalFireDepartment,
-            contentDescription = "Streak"
+            contentDescription = "Streak",
+            tint = if (days == 0) {Color.Unspecified} else {Color(0xFFFFA500)}
         )
         
         Text(
-            text = days.toString()
+            text = days.toString(),
+            color = if (days == 0) {Color.Unspecified} else {Color(0xFFFFA500)},
         )
     }
 }
 
 @Composable
 fun MissionCompleteScreen(modifier: Modifier = Modifier) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Challenge completed!");
+
+        Text(text = "Come back tomorrow for the next challenge.");
+    }
+}
+
+@Composable
+fun MissionFailedScreen(modifier: Modifier = Modifier) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(text = "Challenge failed!");
+
+        Text(text = "Come back tomorrow for the next challenge.");
+
+        // Text(text = "You can do it!"); AI generated!!!!
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ConfirmationDialog(
+    onDismissRequest: () -> Unit,
+    onConfirmRequest: () -> Unit,
+    dialogTitle: String,
+    dialogText: String,
+) {
+    BasicAlertDialog(
+        onDismissRequest = onDismissRequest,
+    ) {
+
+    }
 
 }
 
@@ -329,7 +500,7 @@ fun MissionCompleteScreen(modifier: Modifier = Modifier) {
 @Preview
 @Composable
 fun MissionCardPreview() {
-    MissionsTheme {
+    MissionsTheme(darkTheme = true) {
         MissionScreen()
     }
 }
