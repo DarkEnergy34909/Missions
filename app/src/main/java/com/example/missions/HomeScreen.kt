@@ -58,6 +58,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.missions.data.DataSource
+import com.example.missions.data.Mission
 import com.example.missions.ui.theme.MissionsTheme
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -105,16 +106,21 @@ fun MissionScreen(modifier: Modifier = Modifier) {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
-            //MenuBar()
+            /*Row() {
+                Spacer(modifier = Modifier.weight(2f))
+
+                Streak(
+                    days = 1,
+                    modifier = Modifier.weight(1f)
+                )
+            }*/
 
             //Spacer(modifier = Modifier.size(256.dp))
             if (missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
-                Streak(1);
 
                 MissionCard(
-                    missionText = DataSource.missions[Random.nextInt(0, DataSource.missions.size)],
+                    mission = DataSource.missions[Random.nextInt(0, DataSource.missions.size)],
                     date = dateInString,
-                    missionDifficulty = 2
                 )
 
                 SuccessFailureButtons(
@@ -165,12 +171,13 @@ fun MissionAppBar(
             }
         },
         actions = {
-            IconButton(onClick = {}) {
-                Icon(
-                    imageVector = Icons.Filled.Settings,
-                    contentDescription = "Settings"
-                )
-            }
+            //IconButton(onClick = {}) {
+                //Icon(
+                    //imageVector = Icons.Filled.Settings,
+                    //contentDescription = "Settings"
+                //)
+            //}
+            Streak(1)
         }
     );
 }
@@ -366,9 +373,10 @@ fun MenuBar(modifier: Modifier = Modifier) {
 
 @Composable
 fun MissionCard(
-    missionText: String,
+    //missionText: String,
+    //missionDifficulty: Int,
+    mission: Mission,
     date: String,
-    missionDifficulty: Int,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -409,12 +417,12 @@ fun MissionCard(
                         .padding(start = dimensionResource(R.dimen.padding_small), end = dimensionResource(R.dimen.padding_small))
                 )
                 Text(
-                    text = DataSource.difficulties[missionDifficulty],
+                    text = mission.difficulty,
                     textAlign = TextAlign.End,
-                    color = when (missionDifficulty) {
-                        MissionDifficulties.EASY.ordinal -> Color.Green
-                        MissionDifficulties.MEDIUM.ordinal -> Color.Yellow
-                        MissionDifficulties.HARD.ordinal -> Color.Red
+                    color = when (mission.difficulty) {
+                        "Easy" -> Color.Green
+                        "Medium" -> Color.Yellow
+                        "Hard" -> Color.Red
                         else -> Color.Unspecified
                     },
                     modifier = Modifier
@@ -424,7 +432,7 @@ fun MissionCard(
 
             }
             Text(
-                text = missionText,
+                text = mission.text,
                 /* TODO style = ... */
                 modifier = Modifier
                     .padding(dimensionResource(R.dimen.padding_large))
