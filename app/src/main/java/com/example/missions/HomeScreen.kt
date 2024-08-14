@@ -57,6 +57,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.missions.data.DataSource
 import com.example.missions.data.Mission
 import com.example.missions.ui.theme.MissionsTheme
@@ -72,19 +77,26 @@ enum class MissionStates() {
     MISSION_FAILED
 }
 
-enum class MissionDifficulties() {
-    EASY,
-    MEDIUM,
-    HARD
+enum class MissionScreens() {
+    Home(),
+    Add(),
+    History(),
+    More()
 }
 
 @Composable
-fun MissionScreen(modifier: Modifier = Modifier) {
+fun MissionScreen(
+    navController: NavHostController = rememberNavController(),
+    modifier: Modifier = Modifier
+) {
     var missionState by remember {mutableStateOf(MissionStates.MISSION_UNDEFINED.ordinal)}
 
-    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val date = Calendar.getInstance().time
-    val dateInString = dateFormatter.format(date)
+    val currentMission: Mission = DataSource.missions[Random.nextInt(0, DataSource.missions.size)]
+
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentScreen = MissionScreens.valueOf(
+        backStackEntry?.destination?.route ?: MissionScreens.Home.name
+    )
 
     Scaffold(
         topBar = {
@@ -93,51 +105,97 @@ fun MissionScreen(modifier: Modifier = Modifier) {
             )
         },
         bottomBar = {
-            NavigationBar()
+            NavigationBar(
+                navController = navController,
+                currentScreen = currentScreen
+            )
         },
         modifier = modifier
             .statusBarsPadding()
             .padding(dimensionResource(R.dimen.padding_small))
     ) {innerPadding ->
-        Column(
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+        NavHost(
+            navController = navController,
+            startDestination = MissionScreens.Home.name,
+            modifier = Modifier.padding(innerPadding)
         ) {
-            /*Row() {
-                Spacer(modifier = Modifier.weight(2f))
-
-                Streak(
-                    days = 1,
-                    modifier = Modifier.weight(1f)
-                )
-            }*/
-
-            //Spacer(modifier = Modifier.size(256.dp))
-            if (missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
-
-                MissionCard(
-                    mission = DataSource.missions[Random.nextInt(0, DataSource.missions.size)],
-                    date = dateInString,
-                )
-
-                SuccessFailureButtons(
-                    onFailButtonPressed = {missionState = MissionStates.MISSION_FAILED.ordinal},
-                    onSuccessButtonPressed = {missionState = MissionStates.MISSION_COMPLETED.ordinal}
+            composable(route = MissionScreens.Home.name) {
+                HomeScreen(
+                    currentMission = currentMission,
+                    innerPadding = innerPadding,
+                    missionState = missionState,
+                    completeMission = {missionState = MissionStates.MISSION_COMPLETED.ordinal},
+                    failMission = {missionState = MissionStates.MISSION_FAILED.ordinal}
                 )
             }
-            else if (missionState == MissionStates.MISSION_COMPLETED.ordinal) {
-                MissionCompleteScreen()
+            composable(route = MissionScreens.Add.name) {
+                //AddScreen() TODO: Add screen
             }
-            else {
-                MissionFailedScreen()
+            composable(route = MissionScreens.History.name) {
+                HistoryScreen(
+                    previousMissions = DataSource.missions,
+                    contentPadding = innerPadding
+                )
             }
-
+            composable(route = MissionScreens.More.name) {
+                //MoreScreen() TODO: More screen
+            }
         }
     }
 
+}
+
+@Composable
+fun HomeScreen(
+    missionState: Int,
+    completeMission: () -> Unit,
+    failMission: () -> Unit,
+    currentMission: Mission,
+    innerPadding: PaddingValues,
+    modifier: Modifier = Modifier
+) {
+
+    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val date = Calendar.getInstance().time
+    val dateInString = dateFormatter.format(date)
+
+    Column(
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(innerPadding)
+    ) {
+        /*Row() {
+            Spacer(modifier = Modifier.weight(2f))
+
+            Streak(
+                days = 1,
+                modifier = Modifier.weight(1f)
+            )
+        }*/
+
+        //Spacer(modifier = Modifier.size(256.dp))
+        if (missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
+
+            MissionCard(
+                mission = currentMission  /*DataSource.missions[Random.nextInt(0, DataSource.missions.size)]*/,
+                date = dateInString,
+            )
+
+            SuccessFailureButtons(
+                onFailButtonPressed = failMission     /*{missionState = MissionStates.MISSION_FAILED.ordinal}*/,
+                onSuccessButtonPressed = completeMission  /*{missionState = MissionStates.MISSION_COMPLETED.ordinal}*/
+            )
+        }
+        else if (missionState == MissionStates.MISSION_COMPLETED.ordinal) {
+            MissionCompleteScreen()
+        }
+        else {
+            MissionFailedScreen()
+        }
+
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -183,12 +241,17 @@ fun MissionAppBar(
 }
 
 @Composable
-fun NavigationBar(modifier: Modifier = Modifier) {
+fun NavigationBar(
+    navController: NavHostController,
+    currentScreen: MissionScreens,
+    modifier: Modifier = Modifier
+) {
     BottomAppBar(
         actions = {
 
+            // Home button
             IconButton(
-                onClick = {},
+                onClick = {if (currentScreen != MissionScreens.Home) {navController.navigate(MissionScreens.Home.name)}},
                 modifier = Modifier.weight(1f)
             ) {
                 Column(
@@ -209,8 +272,9 @@ fun NavigationBar(modifier: Modifier = Modifier) {
 
             }
 
+            // Add button
             IconButton(
-                onClick = {},
+                onClick = {if (currentScreen != MissionScreens.Add) {navController.navigate(MissionScreens.Add.name)}},
                 modifier = Modifier.weight(1f)
             ) {
                 Column(
@@ -229,8 +293,9 @@ fun NavigationBar(modifier: Modifier = Modifier) {
                 }
             }
 
+            // History button
             IconButton(
-                onClick = {},
+                onClick = {if (currentScreen != MissionScreens.History) {navController.navigate(MissionScreens.History.name)}},
                 modifier = Modifier.weight(1f)
             ) {
                 Column(
@@ -249,8 +314,9 @@ fun NavigationBar(modifier: Modifier = Modifier) {
                 }
             }
 
+            // More button
             IconButton(
-                onClick = {},
+                onClick = {if (currentScreen != MissionScreens.More) {navController.navigate(MissionScreens.More.name)}},
                 modifier = Modifier.weight(1f)
             ) {
                 Column(
@@ -405,7 +471,10 @@ fun MissionCard(
                     textAlign = TextAlign.Start,
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = dimensionResource(R.dimen.padding_small), end = dimensionResource(R.dimen.padding_small))
+                        .padding(
+                            start = dimensionResource(R.dimen.padding_small),
+                            end = dimensionResource(R.dimen.padding_small)
+                        )
                 )
 
 
@@ -414,7 +483,10 @@ fun MissionCard(
                     textAlign = TextAlign.End,
                     modifier = Modifier
                         .weight(1f)
-                        .padding(start = dimensionResource(R.dimen.padding_small), end = dimensionResource(R.dimen.padding_small))
+                        .padding(
+                            start = dimensionResource(R.dimen.padding_small),
+                            end = dimensionResource(R.dimen.padding_small)
+                        )
                 )
                 Text(
                     text = mission.difficulty,
