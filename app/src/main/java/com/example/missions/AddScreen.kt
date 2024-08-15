@@ -1,13 +1,17 @@
 package com.example.missions
 
+import android.widget.CheckBox
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -30,36 +34,81 @@ import com.example.missions.ui.theme.MissionsTheme
 
 @Composable
 fun AddScreen(
-    contentPadding: PaddingValues
+    modifier: Modifier = Modifier
 ) {
+    var text by remember { mutableStateOf("") }
+    var difficulty by remember { mutableStateOf("") }
+    var agree by remember {mutableStateOf(false)}
+    var added by remember {mutableStateOf(false)}
+
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .padding(contentPadding)
+            //.padding(contentPadding)
     ) {
         Text(
-            text = "Add a new challenge:",
+            text = "New challenge",
+            style = MaterialTheme.typography.headlineLarge
+        )
+
+        Spacer(modifier = Modifier.height(64.dp))
+
+        Text(
+            text = "Enter your custom challenge",
             //style = MaterialTheme.typography.h4
         )
         Spacer(modifier = Modifier.height(16.dp))
-        var text by remember { mutableStateOf("") }
-        var difficulty by remember { mutableStateOf("") }
 
         OutlinedTextField(
             value = text,
             onValueChange = {text = it},
-            label = { Text("Enter your challenge") }
+            label = { Text("Enter challenge") }
         )
+        Spacer(modifier = Modifier.height(64.dp))
+
+        Text(text = "Select the difficulty level of this challenge")
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(text = "What is the difficulty level of this challenge?")
+        DropDownMenu(
+            items = listOf("Easy", "Medium", "Hard"),
+            onValueChange = {difficulty = it},
+            selectedOption = difficulty
+        )
+
+        Spacer(modifier = Modifier.height(64.dp))
+
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Checkbox(
+                checked = agree,
+                onCheckedChange = {agree = !agree}
+            )
+            Text(text = "Allow others to be given this challenge")
+        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        DropDownMenu(items = listOf("Easy", "Medium", "Hard"))
+        Button(
+            onClick = {},
+        ) {
+            Text("Add challenge")
+        }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = {
+                text = ""
+                difficulty = ""
+                agree = false
+            },
+        ) {
+            Text("Clear")
+        }
 
         /*
 
@@ -89,9 +138,12 @@ fun AddScreen(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DropDownMenu(items: List<String>) {
+fun DropDownMenu(
+    items: List<String>,
+    onValueChange: (String) -> Unit,
+    selectedOption: String
+) {
     var expanded by remember { mutableStateOf(false) }
-    var selectedOption by remember { mutableStateOf("")}
 
     ExposedDropdownMenuBox(
         expanded = expanded,
@@ -106,7 +158,6 @@ fun DropDownMenu(items: List<String>) {
             },
             modifier = Modifier
                 .menuAnchor()
-                .fillMaxWidth()
         )
 
         ExposedDropdownMenu(
@@ -117,8 +168,9 @@ fun DropDownMenu(items: List<String>) {
                 DropdownMenuItem(
                     text = {Text(item)},
                     onClick = {
-                        selectedOption = item
+                        //selectedOption = item
                         expanded = false
+                        onValueChange(item)
                     }
                 )
             }
@@ -126,10 +178,15 @@ fun DropDownMenu(items: List<String>) {
     }
 }
 
+@Composable
+fun AddMissionForm() {
+
+}
+
 @Preview
 @Composable
 fun AddScreenPreview() {
     MissionsTheme(darkTheme = true) {
-        AddScreen(contentPadding = PaddingValues(0.dp))
+        AddScreen(modifier = Modifier)
     }
 }

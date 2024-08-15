@@ -1,6 +1,7 @@
 package com.example.missions
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -18,10 +19,13 @@ import com.example.missions.ui.theme.MissionsTheme
 @Composable
 fun HistoryScreen(
     previousMissions: List<Mission>,
-    contentPadding: PaddingValues,
+    //contentPadding: PaddingValues,
     modifier: Modifier = Modifier
 ) {
-    LazyColumn(contentPadding = contentPadding) {
+    LazyColumn(
+        modifier = modifier
+            .fillMaxSize()
+    ) {
         items(previousMissions) { mission ->
             MissionCard(
                 mission = mission,
@@ -37,6 +41,6 @@ fun HistoryScreen(
 @Composable
 fun HistoryScreenPreview() {
     MissionsTheme(darkTheme = true) {
-        HistoryScreen(DataSource.missions, PaddingValues(0.dp))
+        HistoryScreen(DataSource.missions, Modifier)
     }
 }

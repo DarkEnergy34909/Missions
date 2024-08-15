@@ -117,24 +117,29 @@ fun MissionScreen(
         NavHost(
             navController = navController,
             startDestination = MissionScreens.Home.name,
-            modifier = Modifier.padding(innerPadding)
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+
         ) {
             composable(route = MissionScreens.Home.name) {
                 HomeScreen(
                     currentMission = currentMission,
-                    innerPadding = innerPadding,
                     missionState = missionState,
                     completeMission = {missionState = MissionStates.MISSION_COMPLETED.ordinal},
-                    failMission = {missionState = MissionStates.MISSION_FAILED.ordinal}
+                    failMission = {missionState = MissionStates.MISSION_FAILED.ordinal},
+                    modifier = modifier
                 )
             }
             composable(route = MissionScreens.Add.name) {
-                AddScreen(contentPadding = innerPadding)
+                AddScreen(
+                    modifier = modifier
+                )
             }
             composable(route = MissionScreens.History.name) {
                 HistoryScreen(
                     previousMissions = DataSource.missions,
-                    contentPadding = innerPadding
+                    modifier = modifier
                 )
             }
             composable(route = MissionScreens.More.name) {
@@ -151,7 +156,7 @@ fun HomeScreen(
     completeMission: () -> Unit,
     failMission: () -> Unit,
     currentMission: Mission,
-    innerPadding: PaddingValues,
+    //innerPadding: PaddingValues,
     modifier: Modifier = Modifier
 ) {
 
@@ -162,9 +167,9 @@ fun HomeScreen(
     Column(
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
-            .padding(innerPadding)
+            //.padding(innerPadding)
     ) {
         /*Row() {
             Spacer(modifier = Modifier.weight(2f))
