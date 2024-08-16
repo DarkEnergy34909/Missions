@@ -9,7 +9,7 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface MissionDao {
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(mission: Mission)
 
     @Update
@@ -18,10 +18,16 @@ interface MissionDao {
     @Delete
     suspend fun delete(mission: Mission)
 
-    @Query("SELECT * FROM missions WHERE id = :id")
-    fun getMission(id: Int): Flow<Mission>
+    @Query("SELECT * FROM missions WHERE text = :text")
+    suspend fun getMission(text: String): Mission
 
     @Query("SELECT * FROM missions ORDER BY id")
-    fun getAllMissions(): Flow<List<Mission>>
+    suspend fun getAllMissions(): List<Mission>
+
+    @Query("SELECT * FROM missions WHERE completed = false ORDER BY id")
+    suspend fun getUncompletedMissions(): List<Mission>
+
+    @Query("SELECT * FROM missions WHERE completed = true OR failed = true ORDER BY id")
+    suspend fun getCompletedMissions(): List<Mission>
 
 }

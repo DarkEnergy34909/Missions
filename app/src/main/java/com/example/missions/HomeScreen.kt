@@ -1,5 +1,6 @@
 package com.example.missions
 
+import android.annotation.SuppressLint
 import android.widget.CheckBox
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateContentSize
@@ -43,14 +44,17 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.style.TextAlign
@@ -64,7 +68,10 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.missions.data.DataSource
 import com.example.missions.data.Mission
+import com.example.missions.data.MissionRepository
 import com.example.missions.ui.theme.MissionsTheme
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -84,14 +91,27 @@ enum class MissionScreens() {
     More()
 }
 
+//@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun MissionScreen(
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+
+    val repository = remember{ MissionRepository(context) }
+
     var missionState by remember {mutableStateOf(MissionStates.MISSION_UNDEFINED.ordinal)}
 
-    val currentMission by remember {mutableStateOf(DataSource.missions[Random.nextInt(0, DataSource.missions.size)])}
+    //var currentMission: Mission by remember {mutableStateOf(DataSource.missions[Random.nextInt(0, DataSource.missions.size)])}
+    var currentMission: Mission by remember {mutableStateOf(Mission(text = "Loading...", difficulty = "Easy", completed = false, dateCompleted = ""))}
+
+    LaunchedEffect(scope) {
+        //DataSource.addMissionsToDatabase(repository)
+        currentMission = getNewMission(repository)
+    }
+
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentScreen = MissionScreens.valueOf(
@@ -124,21 +144,38 @@ fun MissionScreen(
         ) {
             composable(route = MissionScreens.Home.name) {
                 HomeScreen(
+                    repository = repository,
                     currentMission = currentMission,
                     missionState = missionState,
-                    completeMission = {missionState = MissionStates.MISSION_COMPLETED.ordinal},
-                    failMission = {missionState = MissionStates.MISSION_FAILED.ordinal},
+                    completeMission = {
+                        missionState = MissionStates.MISSION_COMPLETED.ordinal
+                        currentMission.completed = true
+                        scope.launch{
+                            repository.updateMission(currentMission)
+                        }
+                                      },
+
+                    failMission = {
+                        missionState = MissionStates.MISSION_FAILED.ordinal
+                        currentMission.failed = true
+                        scope.launch{
+                            repository.updateMission(currentMission)
+                        }
+                                  },
+
                     modifier = modifier
                 )
             }
             composable(route = MissionScreens.Add.name) {
                 AddScreen(
+                    repository = repository,
                     modifier = modifier
                 )
             }
             composable(route = MissionScreens.History.name) {
                 HistoryScreen(
-                    previousMissions = DataSource.missions,
+                    repository = repository,
+                    //previousMissions = DataSource.missions,
                     modifier = modifier
                 )
             }
@@ -152,6 +189,7 @@ fun MissionScreen(
 
 @Composable
 fun HomeScreen(
+    repository: MissionRepository,
     missionState: Int,
     completeMission: () -> Unit,
     failMission: () -> Unit,
@@ -454,7 +492,7 @@ fun MissionCard(
 ) {
     Card(
         colors = CardDefaults.cardColors(
-                containerColor =  if (!previous) {MaterialTheme.colorScheme.surfaceVariant} else {if(mission.completed) {Color.Green} else {MaterialTheme.colorScheme.errorContainer}},
+                containerColor =  if (!previous) {MaterialTheme.colorScheme.surfaceVariant} else {if(mission.completed) {Color(0xFF2f633d)} else {MaterialTheme.colorScheme.errorContainer}},
         ),
         modifier = modifier
             .fillMaxWidth()
@@ -602,6 +640,11 @@ fun MissionCardPreview() {
     MissionsTheme(darkTheme = false) {
         MissionScreen()
     }
+}
+
+private suspend fun getNewMission(repository: MissionRepository): Mission {
+    val missionList = repository.getUncompletedMissions()
+    return missionList[Random.nextInt(0, missionList.size)]
 }
 
 

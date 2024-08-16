@@ -11,6 +11,7 @@ data class Mission(
     val text: String,
     val difficulty: String,
     var completed: Boolean = false,
+    var failed: Boolean = false,
     var dateCompleted: String = ""
 ) {
     //var completed = false

@@ -16,4 +16,10 @@ object DataSource {
         "Medium",
         "Hard"
     )
+
+    suspend fun addMissionsToDatabase(missionRepository: MissionRepository) {
+        for (mission in missions) {
+            missionRepository.insertMission(mission)
+        }
+    }
 }
