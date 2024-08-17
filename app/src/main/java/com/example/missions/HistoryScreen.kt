@@ -73,7 +73,7 @@ fun NoHistoryScreen(modifier: Modifier = Modifier) {
             .fillMaxSize()
             //.padding(dimensionResource(id = R.dimen.spacing_large))
     ) {
-        Text(text = "No previous missions...")
+        Text(text = "No previous challenges...")
 
         Text(text = "Get a move on!")
     }

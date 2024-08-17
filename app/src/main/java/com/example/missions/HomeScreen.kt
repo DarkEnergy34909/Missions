@@ -1,6 +1,7 @@
 package com.example.missions
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.widget.CheckBox
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateContentSize
@@ -45,6 +46,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -61,6 +63,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -69,6 +72,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.missions.data.DataSource
 import com.example.missions.data.Mission
 import com.example.missions.data.MissionRepository
+import com.example.missions.data.UserPreferencesRepository
 import com.example.missions.ui.theme.MissionsTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -91,6 +95,9 @@ enum class MissionScreens() {
     More()
 }
 
+const val USER_PREFERENCE_NAME = "user_preferences"
+val Context.userPreferencesDataStore by preferencesDataStore(name = USER_PREFERENCE_NAME)
+
 //@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun MissionScreen(
@@ -99,6 +106,9 @@ fun MissionScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+
+    val userPreferencesRepository = remember { UserPreferencesRepository(context.userPreferencesDataStore) }
+    val userStreak by userPreferencesRepository.streakFlow.collectAsState(initial = 0)
 
     val repository = remember{ MissionRepository(context) }
 
@@ -122,6 +132,7 @@ fun MissionScreen(
         topBar = {
             MissionAppBar(
                 canNavigateBack = false,
+                streak = userStreak
             )
         },
         bottomBar = {
@@ -145,6 +156,7 @@ fun MissionScreen(
             composable(route = MissionScreens.Home.name) {
                 HomeScreen(
                     repository = repository,
+                    streak = userStreak,
                     currentMission = currentMission,
                     missionState = missionState,
                     completeMission = {
@@ -152,6 +164,8 @@ fun MissionScreen(
                         currentMission.completed = true
                         scope.launch{
                             repository.updateMission(currentMission)
+
+                            userPreferencesRepository.savePreferences(streak = userStreak + 1)
                         }
                                       },
 
@@ -160,6 +174,8 @@ fun MissionScreen(
                         currentMission.failed = true
                         scope.launch{
                             repository.updateMission(currentMission)
+
+                            userPreferencesRepository.savePreferences(streak = 0)
                         }
                                   },
 
@@ -190,6 +206,7 @@ fun MissionScreen(
 @Composable
 fun HomeScreen(
     repository: MissionRepository,
+    streak: Int,
     missionState: Int,
     completeMission: () -> Unit,
     failMission: () -> Unit,
@@ -233,7 +250,7 @@ fun HomeScreen(
             )
         }
         else if (missionState == MissionStates.MISSION_COMPLETED.ordinal) {
-            MissionCompleteScreen()
+            MissionCompleteScreen(streak = streak)
         }
         else {
             MissionFailedScreen()
@@ -245,6 +262,7 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MissionAppBar(
+    streak: Int,
     canNavigateBack: Boolean,
     modifier: Modifier = Modifier
 ) {
@@ -279,7 +297,7 @@ fun MissionAppBar(
                     //contentDescription = "Settings"
                 //)
             //}
-            Streak(32)
+            Streak(days = streak)
         }
     );
 }
@@ -582,7 +600,10 @@ fun Streak(
 }
 
 @Composable
-fun MissionCompleteScreen(modifier: Modifier = Modifier) {
+fun MissionCompleteScreen(
+    streak: Int,
+    modifier: Modifier = Modifier
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -590,7 +611,7 @@ fun MissionCompleteScreen(modifier: Modifier = Modifier) {
 
         Spacer(modifier = Modifier.height(32.dp));
 
-        Text(text = "Your streak has been increased to x days.");
+        Text(text = "Your streak has been increased to $streak" + if (streak == 1) {" day!"} else {" days!"});
 
         Spacer(modifier = Modifier.height(32.dp));
 

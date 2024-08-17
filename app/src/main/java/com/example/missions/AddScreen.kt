@@ -207,7 +207,7 @@ fun MissionAddedScreen(modifier: Modifier = Modifier) {
         modifier = Modifier
             .fillMaxSize()
     ) {
-        Text("Mission added!")
+        Text("Challenge added!")
     }
 }
 
