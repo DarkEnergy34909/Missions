@@ -95,31 +95,35 @@ enum class MissionScreens() {
     More()
 }
 
-const val USER_PREFERENCE_NAME = "user_preferences"
-val Context.userPreferencesDataStore by preferencesDataStore(name = USER_PREFERENCE_NAME)
+//const val USER_PREFERENCE_NAME = "user_preferences"
+//val Context.userPreferencesDataStore by preferencesDataStore(name = USER_PREFERENCE_NAME)
 
 //@SuppressLint("CoroutineCreationDuringComposition")
 @Composable
 fun MissionScreen(
+    missionRepository: MissionRepository,
+    userPreferencesRepository: UserPreferencesRepository,
     navController: NavHostController = rememberNavController(),
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    val userPreferencesRepository = remember { UserPreferencesRepository(context.userPreferencesDataStore) }
+    //val userPreferencesRepository = remember { UserPreferencesRepository(context.userPreferencesDataStore) }
     val userStreak by userPreferencesRepository.streakFlow.collectAsState(initial = 0)
 
-    val repository = remember{ MissionRepository(context) }
+    //val missionRepository = remember{ MissionRepository(context) }
 
-    var missionState by remember {mutableStateOf(MissionStates.MISSION_UNDEFINED.ordinal)}
+    //var missionState by remember {mutableStateOf(MissionStates.MISSION_UNDEFINED.ordinal)}
+    val missionState by userPreferencesRepository.missionStateFlow.collectAsState(initial = MissionStates.MISSION_UNDEFINED.ordinal)
 
     //var currentMission: Mission by remember {mutableStateOf(DataSource.missions[Random.nextInt(0, DataSource.missions.size)])}
     var currentMission: Mission by remember {mutableStateOf(Mission(text = "Loading...", difficulty = "Easy", completed = false, dateCompleted = ""))}
 
     LaunchedEffect(scope) {
+        //userPreferencesRepository.saveMissionState(missionState = MissionStates.MISSION_UNDEFINED.ordinal)
         //DataSource.addMissionsToDatabase(repository)
-        currentMission = getNewMission(repository)
+        currentMission = getNewMission(missionRepository)
     }
 
 
@@ -155,27 +159,31 @@ fun MissionScreen(
         ) {
             composable(route = MissionScreens.Home.name) {
                 HomeScreen(
-                    repository = repository,
+                    repository = missionRepository,
                     streak = userStreak,
                     currentMission = currentMission,
                     missionState = missionState,
                     completeMission = {
-                        missionState = MissionStates.MISSION_COMPLETED.ordinal
+                        //missionState = MissionStates.MISSION_COMPLETED.ordinal
                         currentMission.completed = true
                         scope.launch{
-                            repository.updateMission(currentMission)
+                            missionRepository.updateMission(currentMission)
 
-                            userPreferencesRepository.savePreferences(streak = userStreak + 1)
+                            userPreferencesRepository.saveMissionState(missionState = MissionStates.MISSION_COMPLETED.ordinal)
+
+                            userPreferencesRepository.saveStreak(streak = userStreak + 1)
                         }
                                       },
 
                     failMission = {
-                        missionState = MissionStates.MISSION_FAILED.ordinal
+                        //missionState = MissionStates.MISSION_FAILED.ordinal
                         currentMission.failed = true
                         scope.launch{
-                            repository.updateMission(currentMission)
+                            missionRepository.updateMission(currentMission)
 
-                            userPreferencesRepository.savePreferences(streak = 0)
+                            userPreferencesRepository.saveMissionState(missionState = MissionStates.MISSION_FAILED.ordinal)
+
+                            userPreferencesRepository.saveStreak(streak = 0)
                         }
                                   },
 
@@ -184,13 +192,13 @@ fun MissionScreen(
             }
             composable(route = MissionScreens.Add.name) {
                 AddScreen(
-                    repository = repository,
+                    repository = missionRepository,
                     modifier = modifier
                 )
             }
             composable(route = MissionScreens.History.name) {
                 HistoryScreen(
-                    repository = repository,
+                    repository = missionRepository,
                     //previousMissions = DataSource.missions,
                     modifier = modifier
                 )
@@ -659,7 +667,12 @@ fun ConfirmationDialog(
 @Composable
 fun MissionCardPreview() {
     MissionsTheme(darkTheme = false) {
-        MissionScreen()
+        MissionScreen(
+            missionRepository = MissionRepository(LocalContext.current),
+            userPreferencesRepository = UserPreferencesRepository(LocalContext.current.userPreferencesDataStore),
+            modifier = Modifier
+                .fillMaxSize()
+        )
     }
 }
 

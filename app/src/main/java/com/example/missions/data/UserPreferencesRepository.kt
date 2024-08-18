@@ -29,16 +29,36 @@ class UserPreferencesRepository(
         preferences[STREAK] ?: 0
     }
 
+    val missionStateFlow: Flow<Int> = dataStore.data
+        .catch{ exception ->
+            if (exception is IOException) {
+                Log.e(TAG, "Error reading preferences", exception)
+                emit(emptyPreferences())
+            }
+            else {
+                throw exception
+            }
+
+        }
+        .map { preferences ->
+        preferences[MISSION_STATE] ?: 0
+    }
+
     private companion object {
         val STREAK = intPreferencesKey("streak")
+        val MISSION_STATE = intPreferencesKey("mission_state")
         const val TAG = "UserPreferencesRepository"
     }
 
-    suspend fun savePreferences(streak: Int) {
+    suspend fun saveStreak(streak: Int) {
         dataStore.edit { preferences ->
             preferences[STREAK] = streak
         }
     }
 
-
+    suspend fun saveMissionState(missionState: Int) {
+        dataStore.edit { preferences ->
+            preferences[MISSION_STATE] = missionState
+        }
+    }
 }

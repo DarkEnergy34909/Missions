@@ -1,5 +1,6 @@
 package com.example.missions
 
+import android.content.Context
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -14,12 +15,25 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.datastore.preferences.preferencesDataStore
+import com.example.missions.data.MissionRepository
+import com.example.missions.data.UserPreferencesRepository
+import com.example.missions.data.UserPreferencesRepositorySingleton
 import com.example.missions.ui.theme.MissionsTheme
+import com.example.missions.workers.scheduleNotification
+
+const val USER_PREFERENCE_NAME = "user_preferences"
+val Context.userPreferencesDataStore by preferencesDataStore(name = USER_PREFERENCE_NAME)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val missionRepository = MissionRepository(this)
+        val userPreferencesRepository = UserPreferencesRepositorySingleton.getInstance(this)
+
         enableEdgeToEdge()
         setContent {
             MissionsTheme {
@@ -27,11 +41,15 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MissionScreen()
+                    MissionScreen(
+                        missionRepository = missionRepository,
+                        userPreferencesRepository = userPreferencesRepository
+                    )
                 }
 
             }
         }
+        scheduleNotification(this)
     }
 }
 
@@ -49,6 +67,10 @@ fun Greeting(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun GreetingPreview() {
     MissionsTheme(darkTheme = true) {
-        MissionScreen()
+        MissionScreen(
+            missionRepository = MissionRepository(LocalContext.current),
+            userPreferencesRepository = UserPreferencesRepository(LocalContext.current.userPreferencesDataStore)
+        )
     }
 }
+

@@ -65,10 +65,12 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
 
+    // WorkManager
+    implementation("androidx.work:work-runtime-ktx:2.9.1")
+
     // DataStore
     implementation("androidx.datastore:datastore:1.0.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
-
 
     // Room
     implementation(libs.androidx.room.common)
