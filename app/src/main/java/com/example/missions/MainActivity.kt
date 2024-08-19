@@ -22,6 +22,7 @@ import com.example.missions.data.MissionRepository
 import com.example.missions.data.UserPreferencesRepository
 import com.example.missions.data.UserPreferencesRepositorySingleton
 import com.example.missions.ui.theme.MissionsTheme
+import com.example.missions.workers.scheduleMissionChange
 import com.example.missions.workers.scheduleNotification
 
 const val USER_PREFERENCE_NAME = "user_preferences"
@@ -50,6 +51,12 @@ class MainActivity : ComponentActivity() {
             }
         }
         scheduleNotification(this)
+        scheduleMissionChange(this)
+    }
+
+    override fun onResume() {
+        super.onResume()
+
     }
 }
 

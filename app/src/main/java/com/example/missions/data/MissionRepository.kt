@@ -2,6 +2,7 @@ package com.example.missions.data
 
 import android.content.Context
 import kotlinx.coroutines.flow.Flow
+import kotlin.random.Random
 
 class MissionRepository(context: Context) {
     private val missionDao = MissionDatabase.getDatabase(context).missionDao()
@@ -18,8 +19,11 @@ class MissionRepository(context: Context) {
         missionDao.delete(mission)
     }
 
-    suspend fun getMission(text: String): Mission {
-        return missionDao.getMission(text)
+    suspend fun getMission(id: Int): Mission {
+        if (id == -1) {
+            return Mission(id = -1, text = "No challenges available", difficulty = "Easy", completed = false, dateCompleted = "")
+        }
+        return missionDao.getMission(id)
     }
 
     suspend fun getAllMissions(): List<Mission> {
@@ -33,4 +37,12 @@ class MissionRepository(context: Context) {
     suspend fun getCompletedMissions(): List<Mission> {
         return missionDao.getCompletedMissions()
     }
+}
+
+suspend fun getNewMission(repository: MissionRepository): Mission {
+    val missionList = repository.getUncompletedMissions()
+    if (missionList.isEmpty()) {
+        return Mission(id = -1, text = "No challenges available", difficulty = "Easy", completed = false, dateCompleted = "")
+    }
+    return missionList[Random.nextInt(0, missionList.size)]
 }

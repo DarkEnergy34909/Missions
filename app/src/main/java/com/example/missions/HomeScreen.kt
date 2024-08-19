@@ -2,6 +2,7 @@ package com.example.missions
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.util.Log
 import android.widget.CheckBox
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateContentSize
@@ -57,6 +58,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.style.TextAlign
@@ -64,6 +66,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -73,8 +77,14 @@ import com.example.missions.data.DataSource
 import com.example.missions.data.Mission
 import com.example.missions.data.MissionRepository
 import com.example.missions.data.UserPreferencesRepository
+import com.example.missions.data.getNewMission
 import com.example.missions.ui.theme.MissionsTheme
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Delay
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -99,6 +109,7 @@ enum class MissionScreens() {
 //val Context.userPreferencesDataStore by preferencesDataStore(name = USER_PREFERENCE_NAME)
 
 //@SuppressLint("CoroutineCreationDuringComposition")
+@OptIn(InternalCoroutinesApi::class)
 @Composable
 fun MissionScreen(
     missionRepository: MissionRepository,
@@ -110,21 +121,79 @@ fun MissionScreen(
     val scope = rememberCoroutineScope()
 
     //val userPreferencesRepository = remember { UserPreferencesRepository(context.userPreferencesDataStore) }
-    val userStreak by userPreferencesRepository.streakFlow.collectAsState(initial = 0)
+    val userStreak by userPreferencesRepository.streakFlow.collectAsStateWithLifecycle(initialValue = 0)
 
     //val missionRepository = remember{ MissionRepository(context) }
 
-    //var missionState by remember {mutableStateOf(MissionStates.MISSION_UNDEFINED.ordinal)}
-    val missionState by userPreferencesRepository.missionStateFlow.collectAsState(initial = MissionStates.MISSION_UNDEFINED.ordinal)
+    val missionState by userPreferencesRepository.missionStateFlow.collectAsStateWithLifecycle(initialValue = MissionStates.MISSION_UNDEFINED.ordinal)
 
     //var currentMission: Mission by remember {mutableStateOf(DataSource.missions[Random.nextInt(0, DataSource.missions.size)])}
+
     var currentMission: Mission by remember {mutableStateOf(Mission(text = "Loading...", difficulty = "Easy", completed = false, dateCompleted = ""))}
 
-    LaunchedEffect(scope) {
+    val currentMissionId by userPreferencesRepository.missionIdFlow.collectAsStateWithLifecycle(initialValue = 0)
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
+
+    LaunchedEffect(lifecycleState) {
+        //delay(100)
+
+        when (lifecycleState) {
+            Lifecycle.State.DESTROYED -> {}
+            Lifecycle.State.INITIALIZED -> {}
+            Lifecycle.State.CREATED -> {}
+            Lifecycle.State.STARTED -> {/*
+                Log.e("MISSION_ID_FUN", currentMissionId.toString())
+                if (currentMissionId == -1) {
+                    Log.e("MISSION_ID_FUN", "IF")
+                    currentMission = getNewMission(missionRepository)
+                    userPreferencesRepository.saveMissionId(missionId = currentMission.id)
+                }
+                else {
+                    Log.e("MISSION_ID_FUN", "ELSE")
+                    currentMission = missionRepository.getMission(currentMissionId)
+                }*/
+            }
+            Lifecycle.State.RESUMED -> {
+                delay(100) // TODO: Find a better fix than this
+                Log.e("MISSION_ID_FUN", currentMissionId.toString())
+                if (currentMissionId == 0) {
+                    Log.e("MISSION_ID_FUN", "IF")
+                    currentMission = getNewMission(missionRepository)
+                    userPreferencesRepository.saveMissionId(missionId = currentMission.id)
+                }
+                else {
+                    Log.e("MISSION_ID_FUN", "ELSE")
+                    currentMission = missionRepository.getMission(currentMissionId)
+                }
+            }
+        }
+        /*
+        delay(100)
+        Log.e("MISSION_ID_FUN", currentMissionId.toString())
+        //val currentMissionId: Int? = userPreferencesRepository.missionIdFlow.firstOrNull()
+        //val currentMissionId by userPreferencesRepository.missionIdFlow.collectAsState(initial = null)
+
+        if (currentMissionId == -1) {
+            currentMission = getNewMission(missionRepository)
+            userPreferencesRepository.saveMissionId(missionId = currentMission.id)
+
+        }
+        else {
+            currentMission = missionRepository.getMission(currentMissionId)
+        }
+        //currentMission = missionRepository.getMission(currentMissionId)*/
+    }
+
+
+
+    /*LaunchedEffect(scope) {
         //userPreferencesRepository.saveMissionState(missionState = MissionStates.MISSION_UNDEFINED.ordinal)
         //DataSource.addMissionsToDatabase(repository)
+        //Log.e("MISSION_ID_FUN", currentMissionId.toString())
         currentMission = getNewMission(missionRepository)
-    }
+    }*/
 
 
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -676,9 +745,12 @@ fun MissionCardPreview() {
     }
 }
 
-private suspend fun getNewMission(repository: MissionRepository): Mission {
-    val missionList = repository.getUncompletedMissions()
-    return missionList[Random.nextInt(0, missionList.size)]
-}
+
+
+
+
+
+
+
 
 

@@ -18,8 +18,8 @@ interface MissionDao {
     @Delete
     suspend fun delete(mission: Mission)
 
-    @Query("SELECT * FROM missions WHERE text = :text")
-    suspend fun getMission(text: String): Mission
+    @Query("SELECT * FROM missions WHERE id = :id")
+    suspend fun getMission(id: Int): Mission
 
     @Query("SELECT * FROM missions ORDER BY id")
     suspend fun getAllMissions(): List<Mission>

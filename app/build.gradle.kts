@@ -65,6 +65,9 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
 
+    // CollectAsStateWithLifecycle
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+
     // WorkManager
     implementation("androidx.work:work-runtime-ktx:2.9.1")
 

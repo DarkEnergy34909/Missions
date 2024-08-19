@@ -2,7 +2,10 @@ package com.example.missions.workers
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.TaskStackBuilder
 import android.content.Context
+import android.content.Intent
 import android.os.Build
 import android.util.Log
 import android.view.ContextMenu
@@ -16,6 +19,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
 import androidx.work.WorkerParameters
+import com.example.missions.MainActivity
 import com.example.missions.MissionStates
 import com.example.missions.data.UserPreferencesRepository
 import com.example.missions.data.UserPreferencesRepositorySingleton
@@ -38,7 +42,7 @@ class NotificationWorker(
     override suspend fun doWork(): Result {
         val context = applicationContext
 
-        //val userPreferencesRepository = UserPreferencesRepository(context.userPreferencesDataStore) // TODO: DELETE THIS!!!
+        //val userPreferencesRepository = UserPreferencesRepository(context.userPreferencesDataStore)
         val userPreferencesRepository = UserPreferencesRepositorySingleton.getInstance(context)
         val missionState = userPreferencesRepository.missionStateFlow.first()
 
@@ -68,11 +72,19 @@ class NotificationWorker(
             notificationManager.createNotificationChannel(channel)
         }
 
+        val resultIntent = Intent(applicationContext, MainActivity::class.java)
+        val resultPendingIntent: PendingIntent? = TaskStackBuilder.create(applicationContext).run {
+            addNextIntentWithParentStack(resultIntent)
+            getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+        }
+
         val builder = NotificationCompat.Builder(applicationContext, channelId)
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .setContentTitle("Daily Challenge Reminder")
             .setContentText("Don't forget to complete your daily challenge!")
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(resultPendingIntent)
+            .setAutoCancel(true)
 
         with (NotificationManagerCompat.from(applicationContext)) {
             try {
@@ -87,12 +99,15 @@ class NotificationWorker(
     }
 }
 
-fun scheduleNotification(context: Context) {
+fun getDelay(
+    hours: Int,
+    minutes: Int
+): Long {
     val currentTime = System.currentTimeMillis()
     val calendar = Calendar.getInstance().apply {
         timeInMillis = currentTime
-        set(Calendar.HOUR_OF_DAY, 16)
-        set(Calendar.MINUTE, 0)
+        set(Calendar.HOUR_OF_DAY, hours)
+        set(Calendar.MINUTE, minutes)
         set(Calendar.SECOND, 0)
     }
 
@@ -101,6 +116,11 @@ fun scheduleNotification(context: Context) {
     }
 
     val initialDelay = calendar.timeInMillis - currentTime
+    return initialDelay
+}
+
+fun scheduleNotification(context: Context) {
+    val initialDelay = getDelay(16, 0)
 
     val notificationWorkRequest: WorkRequest = PeriodicWorkRequestBuilder<NotificationWorker>(24, TimeUnit.HOURS)
         .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
