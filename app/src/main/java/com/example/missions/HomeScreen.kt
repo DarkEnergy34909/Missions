@@ -137,12 +137,34 @@ fun MissionScreen(
     val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
 
     LaunchedEffect(lifecycleState) {
-        //delay(100)
+        delay(200)
+        Log.e("MISSION_ID_FUN", currentMissionId.toString())
+        if (currentMissionId == 0) {
+            Log.e("MISSION_ID_FUN", "IF")
+            currentMission = getNewMission(missionRepository)
+            userPreferencesRepository.saveMissionId(missionId = currentMission.id)
+        }
+        else {
+            Log.e("MISSION_ID_FUN", "ELSE")
+            currentMission = missionRepository.getMission(currentMissionId)
+        }
 
         when (lifecycleState) {
             Lifecycle.State.DESTROYED -> {}
             Lifecycle.State.INITIALIZED -> {}
-            Lifecycle.State.CREATED -> {}
+            Lifecycle.State.CREATED -> {/*
+                delay(100)
+                Log.e("MISSION_ID_FUN", currentMissionId.toString())
+                if (currentMissionId == 0) {
+                    Log.e("MISSION_ID_FUN", "IF")
+                    currentMission = getNewMission(missionRepository)
+                    userPreferencesRepository.saveMissionId(missionId = currentMission.id)
+                }
+                else {
+                    Log.e("MISSION_ID_FUN", "ELSE")
+                    currentMission = missionRepository.getMission(currentMissionId)
+                }*/
+            }
             Lifecycle.State.STARTED -> {/*
                 Log.e("MISSION_ID_FUN", currentMissionId.toString())
                 if (currentMissionId == -1) {
@@ -156,7 +178,7 @@ fun MissionScreen(
                 }*/
             }
             Lifecycle.State.RESUMED -> {
-                delay(100) // TODO: Find a better fix than this
+                delay(200) // TODO: Find a better fix than this
                 Log.e("MISSION_ID_FUN", currentMissionId.toString())
                 if (currentMissionId == 0) {
                     Log.e("MISSION_ID_FUN", "IF")
@@ -234,6 +256,7 @@ fun MissionScreen(
                     missionState = missionState,
                     completeMission = {
                         //missionState = MissionStates.MISSION_COMPLETED.ordinal
+                        currentMission.dateCompleted = getDate()
                         currentMission.completed = true
                         scope.launch{
                             missionRepository.updateMission(currentMission)
@@ -247,6 +270,7 @@ fun MissionScreen(
                     failMission = {
                         //missionState = MissionStates.MISSION_FAILED.ordinal
                         currentMission.failed = true
+                        currentMission.dateCompleted = getDate()
                         scope.launch{
                             missionRepository.updateMission(currentMission)
 
@@ -292,9 +316,10 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
 
-    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
-    val date = Calendar.getInstance().time
-    val dateInString = dateFormatter.format(date)
+    //val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    //val date = Calendar.getInstance().time
+    //val dateInString = dateFormatter.format(date)
+    val dateInString = getDate()
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -743,6 +768,14 @@ fun MissionCardPreview() {
                 .fillMaxSize()
         )
     }
+}
+
+fun getDate(): String {
+    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val date = Calendar.getInstance().time
+    val dateInString = dateFormatter.format(date)
+
+    return dateInString
 }
 
 

@@ -10,6 +10,7 @@ import com.example.missions.MissionStates
 import com.example.missions.data.MissionRepository
 import com.example.missions.data.UserPreferencesRepositorySingleton
 import com.example.missions.data.getNewMission
+import com.example.missions.getDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import java.sql.Time
@@ -34,6 +35,7 @@ class NewMissionWorker(
 
             if (!currentMission.completed) {
                 currentMission.failed = true
+                currentMission.dateCompleted = getDate()
             }
 
             missionRepository.updateMission(currentMission)
@@ -59,7 +61,7 @@ class NewMissionWorker(
 }
 
 fun scheduleMissionChange(context: Context) {
-    val initialDelay = getDelay(23, 59)
+    val initialDelay = getDelay(16, 37)
 
     val newMissionWorkRequest: WorkRequest = PeriodicWorkRequestBuilder<NewMissionWorker>(24, TimeUnit.HOURS)
         .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
