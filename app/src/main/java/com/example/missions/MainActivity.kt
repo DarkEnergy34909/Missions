@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.example.missions.data.MissionRepository
 import com.example.missions.data.UserPreferencesRepository
 import com.example.missions.data.UserPreferencesRepositorySingleton
@@ -32,6 +34,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        //WorkManager.getInstance(this).cancelAllWork()
+        //WorkManager.getInstance(this).pruneWork()
         val missionRepository = MissionRepository(this)
         val userPreferencesRepository = UserPreferencesRepositorySingleton.getInstance(this)
 

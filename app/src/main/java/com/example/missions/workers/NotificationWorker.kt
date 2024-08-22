@@ -15,6 +15,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.work.CoroutineWorker
+import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
@@ -122,10 +123,16 @@ fun getDelay(
 fun scheduleNotification(context: Context) {
     val initialDelay = getDelay(16, 0)
 
-    val notificationWorkRequest: WorkRequest = PeriodicWorkRequestBuilder<NotificationWorker>(24, TimeUnit.HOURS)
+    val notificationWorkRequest: PeriodicWorkRequest = PeriodicWorkRequestBuilder<NotificationWorker>(24, TimeUnit.HOURS)
+        .addTag("notification")
         .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
         .build()
+    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        "notification",
+        androidx.work.ExistingPeriodicWorkPolicy.UPDATE,
+        notificationWorkRequest
+    )
+    //WorkManager.getInstance(context).enqueue(notificationWorkRequest)
 
-    WorkManager.getInstance(context).enqueue(notificationWorkRequest)
     println("Notification scheduled")
 }

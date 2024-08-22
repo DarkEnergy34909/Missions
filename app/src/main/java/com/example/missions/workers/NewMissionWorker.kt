@@ -1,7 +1,9 @@
 package com.example.missions.workers
 
 import android.content.Context
+import android.util.Log
 import androidx.work.CoroutineWorker
+import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkRequest
@@ -22,6 +24,7 @@ class NewMissionWorker(
     ): CoroutineWorker(context, params) {
 
     override suspend fun doWork(): Result {
+        Log.i("NewMissionWorker", "Worker started")
         val context = applicationContext
 
         val missionRepository = MissionRepository(context)
@@ -35,7 +38,7 @@ class NewMissionWorker(
 
             if (!currentMission.completed) {
                 currentMission.failed = true
-                currentMission.dateCompleted = getDate()
+                //currentMission.dateCompleted = getDate()
             }
 
             missionRepository.updateMission(currentMission)
@@ -63,10 +66,16 @@ class NewMissionWorker(
 fun scheduleMissionChange(context: Context) {
     val initialDelay = getDelay(23, 59)
 
-    val newMissionWorkRequest: WorkRequest = PeriodicWorkRequestBuilder<NewMissionWorker>(24, TimeUnit.HOURS)
+    val newMissionWorkRequest: PeriodicWorkRequest = PeriodicWorkRequestBuilder<NewMissionWorker>(24, TimeUnit.HOURS)
+        .addTag("new_mission")
         .setInitialDelay(initialDelay, TimeUnit.MILLISECONDS)
         .build()
 
-    WorkManager.getInstance(context).enqueue(newMissionWorkRequest)
+    //WorkManager.getInstance(context).enqueue(newMissionWorkRequest)
+    WorkManager.getInstance(context).enqueueUniquePeriodicWork(
+        "new_mission",
+        androidx.work.ExistingPeriodicWorkPolicy.UPDATE,
+        newMissionWorkRequest
+    )
     println("Mission change scheduled")
 }

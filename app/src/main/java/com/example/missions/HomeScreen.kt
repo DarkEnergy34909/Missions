@@ -142,11 +142,16 @@ fun MissionScreen(
         if (currentMissionId == 0) {
             Log.e("MISSION_ID_FUN", "IF")
             currentMission = getNewMission(missionRepository)
+            currentMission.dateCompleted = getDate()
             userPreferencesRepository.saveMissionId(missionId = currentMission.id)
         }
         else {
             Log.e("MISSION_ID_FUN", "ELSE")
             currentMission = missionRepository.getMission(currentMissionId)
+            if (currentMission.dateCompleted != getDate()) {
+                currentMission.dateCompleted = getDate()
+                missionRepository.updateMission(currentMission)
+            }
         }
 
         when (lifecycleState) {
