@@ -1,5 +1,6 @@
 package com.example.missions
 
+import android.util.Log
 import android.widget.CheckBox
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -33,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.missions.data.Mission
 import com.example.missions.data.MissionRepository
+import com.example.missions.network.MissionsApi
 import com.example.missions.ui.theme.MissionsTheme
 import kotlinx.coroutines.launch
 
@@ -108,9 +110,40 @@ fun AddScreen(
                     if (text != "" && difficulty != "") {
                         scope.launch {
                             repository.insertMission(Mission(text = text, difficulty = difficulty))
+
+                            if (agree) {
+                                Log.i("POST_MISSION", "Agreed to post")
+                            }
+                            else {
+                                Log.i("POST_MISSION", "Did not agree to post")
+                            }
                         }
                         added = true
                     }
+                    /*if (agree) {
+                        scope.launch {
+                            try {
+                                MissionsApi.retrofitService.postMission(Mission(text = text, difficulty = difficulty))
+                                Log.i("POST_MISSION", "Success")
+                            } catch (e: Exception) {
+                                Log.e("POST_MISSION", "Error: ${e.message}")
+                            }
+                        }
+                    }
+
+                    if (agree) {
+                                try {
+                                    MissionsApi.retrofitService.postMission(Mission(text = text, difficulty = difficulty))
+
+                                    Log.i("POST_MISSION", "Success")
+                                } catch (e: Exception) {
+                                    Log.e("POST_MISSION", "Error: ${e.message}")
+                                }
+                            }
+                            else {
+                                Log.i("POST_MISSION", "Not posted")
+                            }
+                    */
                 },
             ) {
                 Text("Add challenge")

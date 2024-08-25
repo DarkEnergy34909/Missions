@@ -13,14 +13,4 @@ data class Mission(
     var completed: Boolean = false,
     var failed: Boolean = false,
     var dateCompleted: String = ""
-) {
-    //var completed = false
-    //lateinit var dateCompleted: String;
-
-    //fun complete() {
-        //completed = true
-
-        //dateCompleted = "08/07/2006"
-    //}
-
-}
+)

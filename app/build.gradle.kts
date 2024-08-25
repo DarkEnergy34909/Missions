@@ -65,6 +65,14 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
 
+    // Retrofit
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+
+    // Retrofit with Gson Converter
+    implementation("com.squareup.retrofit2:converter-scalars:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+
     // CollectAsStateWithLifecycle
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
 

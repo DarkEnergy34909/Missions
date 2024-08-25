@@ -276,7 +276,7 @@ fun MissionScreen(
                 )
             }
             /*composable(route = MissionScreens.More.name) {
-                //MoreScreen() TODO: More screen
+                MoreScreen()
             }*/
         }
     }
@@ -481,9 +481,9 @@ fun NavigationBar(
                     )
                 }
             }
-
+            /*
             // More button
-            /*IconButton(
+            IconButton(
                 onClick = {if (currentScreen != MissionScreens.More) {navController.navigate(MissionScreens.More.name)}},
                 modifier = Modifier.weight(1f)
             ) {
@@ -491,7 +491,7 @@ fun NavigationBar(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.More,
+                        imageVector = Icons.Filled.MoreHoriz,
                         contentDescription = "More",
                         modifier = Modifier.weight(1f)
 
