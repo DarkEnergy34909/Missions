@@ -60,7 +60,7 @@ class NotificationWorker(
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val name = "Challenge Reminder"
-            val descriptionText = "Reminder to completed your daily challenge"
+            val descriptionText = "Reminder to complete your daily challenge"
             val importance = NotificationManager.IMPORTANCE_DEFAULT
             val channel = NotificationChannel(
                 channelId,
@@ -102,14 +102,15 @@ class NotificationWorker(
 
 fun getDelay(
     hours: Int,
-    minutes: Int
+    minutes: Int,
+    seconds: Int = 0
 ): Long {
     val currentTime = System.currentTimeMillis()
     val calendar = Calendar.getInstance().apply {
         timeInMillis = currentTime
         set(Calendar.HOUR_OF_DAY, hours)
         set(Calendar.MINUTE, minutes)
-        set(Calendar.SECOND, 0)
+        set(Calendar.SECOND, seconds)
     }
 
     if (calendar.timeInMillis < currentTime) {

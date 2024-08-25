@@ -20,7 +20,7 @@ data class Mission(
     //fun complete() {
         //completed = true
 
-        //dateCompleted = "08/07/2006" // TODO: Implement dateCompleted
+        //dateCompleted = "08/07/2006"
     //}
 
 }

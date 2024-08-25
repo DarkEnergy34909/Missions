@@ -27,7 +27,16 @@ interface MissionDao {
     @Query("SELECT * FROM missions WHERE completed = false ORDER BY id")
     suspend fun getUncompletedMissions(): List<Mission>
 
-    @Query("SELECT * FROM missions WHERE completed = true OR failed = true ORDER BY id")
+    @Query("SELECT * FROM missions WHERE completed = true OR failed = true ORDER BY dateCompleted DESC")
     suspend fun getCompletedMissions(): List<Mission>
+
+    @Query("SELECT * FROM missions WHERE difficulty = 'Easy' ORDER BY id")
+    suspend fun getEasyMissions(): List<Mission>
+
+    @Query("SELECT * FROM missions WHERE difficulty = 'Medium' ORDER BY id")
+    suspend fun getMediumMissions(): List<Mission>
+
+    @Query("SELECT * FROM missions WHERE difficulty = 'Hard' ORDER BY id")
+    suspend fun getHardMissions(): List<Mission>
 
 }

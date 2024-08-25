@@ -64,7 +64,7 @@ class NewMissionWorker(
 }
 
 fun scheduleMissionChange(context: Context) {
-    val initialDelay = getDelay(23, 59)
+    val initialDelay = getDelay(23, 59, 59)
 
     val newMissionWorkRequest: PeriodicWorkRequest = PeriodicWorkRequestBuilder<NewMissionWorker>(24, TimeUnit.HOURS)
         .addTag("new_mission")

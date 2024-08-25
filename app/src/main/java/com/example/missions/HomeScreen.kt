@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
@@ -28,6 +29,7 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreHoriz
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.AlertDialog
@@ -79,10 +81,12 @@ import com.example.missions.data.MissionRepository
 import com.example.missions.data.UserPreferencesRepository
 import com.example.missions.data.getNewMission
 import com.example.missions.ui.theme.MissionsTheme
+import com.example.missions.workers.getDelay
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Delay
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -90,6 +94,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
 enum class MissionStates() {
@@ -136,14 +141,21 @@ fun MissionScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     val lifecycleState by lifecycleOwner.lifecycle.currentStateFlow.collectAsState()
 
+
+
     LaunchedEffect(lifecycleState) {
         delay(200)
         Log.e("MISSION_ID_FUN", currentMissionId.toString())
         if (currentMissionId == 0) {
             Log.e("MISSION_ID_FUN", "IF")
             currentMission = getNewMission(missionRepository)
-            currentMission.dateCompleted = getDate()
+            //currentMission.dateCompleted = getDate()
             userPreferencesRepository.saveMissionId(missionId = currentMission.id)
+
+            if (currentMission.dateCompleted != getDate()) {
+                currentMission.dateCompleted = getDate()
+                missionRepository.updateMission(currentMission)
+            }
         }
         else {
             Log.e("MISSION_ID_FUN", "ELSE")
@@ -157,31 +169,9 @@ fun MissionScreen(
         when (lifecycleState) {
             Lifecycle.State.DESTROYED -> {}
             Lifecycle.State.INITIALIZED -> {}
-            Lifecycle.State.CREATED -> {/*
-                delay(100)
-                Log.e("MISSION_ID_FUN", currentMissionId.toString())
-                if (currentMissionId == 0) {
-                    Log.e("MISSION_ID_FUN", "IF")
-                    currentMission = getNewMission(missionRepository)
-                    userPreferencesRepository.saveMissionId(missionId = currentMission.id)
-                }
-                else {
-                    Log.e("MISSION_ID_FUN", "ELSE")
-                    currentMission = missionRepository.getMission(currentMissionId)
-                }*/
-            }
-            Lifecycle.State.STARTED -> {/*
-                Log.e("MISSION_ID_FUN", currentMissionId.toString())
-                if (currentMissionId == -1) {
-                    Log.e("MISSION_ID_FUN", "IF")
-                    currentMission = getNewMission(missionRepository)
-                    userPreferencesRepository.saveMissionId(missionId = currentMission.id)
-                }
-                else {
-                    Log.e("MISSION_ID_FUN", "ELSE")
-                    currentMission = missionRepository.getMission(currentMissionId)
-                }*/
-            }
+            Lifecycle.State.CREATED -> {}
+            Lifecycle.State.STARTED -> {}
+
             Lifecycle.State.RESUMED -> {
                 delay(200) // TODO: Find a better fix than this
                 Log.e("MISSION_ID_FUN", currentMissionId.toString())
@@ -189,28 +179,12 @@ fun MissionScreen(
                     Log.e("MISSION_ID_FUN", "IF")
                     currentMission = getNewMission(missionRepository)
                     userPreferencesRepository.saveMissionId(missionId = currentMission.id)
-                }
-                else {
+                } else {
                     Log.e("MISSION_ID_FUN", "ELSE")
                     currentMission = missionRepository.getMission(currentMissionId)
                 }
             }
         }
-        /*
-        delay(100)
-        Log.e("MISSION_ID_FUN", currentMissionId.toString())
-        //val currentMissionId: Int? = userPreferencesRepository.missionIdFlow.firstOrNull()
-        //val currentMissionId by userPreferencesRepository.missionIdFlow.collectAsState(initial = null)
-
-        if (currentMissionId == -1) {
-            currentMission = getNewMission(missionRepository)
-            userPreferencesRepository.saveMissionId(missionId = currentMission.id)
-
-        }
-        else {
-            currentMission = missionRepository.getMission(currentMissionId)
-        }
-        //currentMission = missionRepository.getMission(currentMissionId)*/
     }
 
 
@@ -301,9 +275,9 @@ fun MissionScreen(
                     modifier = modifier
                 )
             }
-            composable(route = MissionScreens.More.name) {
+            /*composable(route = MissionScreens.More.name) {
                 //MoreScreen() TODO: More screen
-            }
+            }*/
         }
     }
 
@@ -320,11 +294,20 @@ fun HomeScreen(
     //innerPadding: PaddingValues,
     modifier: Modifier = Modifier
 ) {
-
+    val scope = rememberCoroutineScope()
     //val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     //val date = Calendar.getInstance().time
     //val dateInString = dateFormatter.format(date)
-    val dateInString = getDate()
+    val dateInString = convertToNormalDate(getDate())
+    var timeLeft by remember {mutableStateOf("")}
+    //timeLeft.value = ""
+
+    LaunchedEffect(scope) {
+        while (true) {
+            timeLeft = getTimeLeft()
+            delay(1000)
+        }
+    }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -345,6 +328,14 @@ fun HomeScreen(
         //Spacer(modifier = Modifier.size(256.dp))
         if (missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
 
+            Text(
+                text = "Today's challenge:",
+                modifier = Modifier.padding(dimensionResource(R.dimen.padding_medium)),
+                fontSize = 24.sp
+            )
+
+            Spacer(modifier = Modifier.height(96.dp))
+
             MissionCard(
                 mission = currentMission  /*DataSource.missions[Random.nextInt(0, DataSource.missions.size)]*/,
                 date = dateInString,
@@ -354,6 +345,14 @@ fun HomeScreen(
             SuccessFailureButtons(
                 onFailButtonPressed = failMission     /*{missionState = MissionStates.MISSION_FAILED.ordinal}*/,
                 onSuccessButtonPressed = completeMission  /*{missionState = MissionStates.MISSION_COMPLETED.ordinal}*/
+            )
+
+            Spacer(modifier = Modifier.height(96.dp))
+
+            TimeLeft(
+                timeLeft = timeLeft,
+                modifier = Modifier
+                    .padding(dimensionResource(R.dimen.padding_medium))
             )
         }
         else if (missionState == MissionStates.MISSION_COMPLETED.ordinal) {
@@ -391,7 +390,7 @@ fun MissionAppBar(
             else {
                 IconButton(onClick = {}) {
                     Icon(
-                        imageVector = Icons.Filled.Menu,
+                        imageVector = Icons.Filled.AccountCircle,
                         contentDescription = "Menu"
                     )
                 }
@@ -484,7 +483,7 @@ fun NavigationBar(
             }
 
             // More button
-            IconButton(
+            /*IconButton(
                 onClick = {if (currentScreen != MissionScreens.More) {navController.navigate(MissionScreens.More.name)}},
                 modifier = Modifier.weight(1f)
             ) {
@@ -492,7 +491,7 @@ fun NavigationBar(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.MoreHoriz,
+                        imageVector = Icons.Filled.More,
                         contentDescription = "More",
                         modifier = Modifier.weight(1f)
 
@@ -503,7 +502,7 @@ fun NavigationBar(
                         modifier = Modifier.weight(1f)
                     )
                 }
-            }
+            }*/
         },
         contentPadding = PaddingValues(0.dp),
         modifier = Modifier
@@ -684,6 +683,14 @@ fun MissionCard(
 }
 
 @Composable
+fun TimeLeft(
+    timeLeft: String,
+    modifier: Modifier = Modifier
+) {
+    Text(text = timeLeft)
+}
+
+@Composable
 fun Streak(
     days: Int = 0,
     modifier: Modifier = Modifier
@@ -776,12 +783,42 @@ fun MissionCardPreview() {
 }
 
 fun getDate(): String {
-    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+    val dateFormatter = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
     val date = Calendar.getInstance().time
     val dateInString = dateFormatter.format(date)
 
     return dateInString
 }
+
+fun convertToNormalDate(date: String): String {
+    val prevDateFormatter = SimpleDateFormat("yyyy/MM/dd", Locale.getDefault())
+    val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+
+    val date = prevDateFormatter.parse(date)
+    val dateInString = dateFormatter.format(date)
+
+    return dateInString
+}
+
+private fun getTimeLeft(): String {
+
+    val millisecondsLeft = getDelay(23, 59, 59)
+
+    return String.format(
+        Locale.getDefault(),
+        //"%02d:%02d:%02d",
+        "%d hours, %d minutes, %d seconds left",
+        TimeUnit.MILLISECONDS.toHours(millisecondsLeft),
+        TimeUnit.MILLISECONDS.toMinutes(millisecondsLeft - TimeUnit.HOURS.toMillis(TimeUnit.MILLISECONDS.toHours(millisecondsLeft))),
+        TimeUnit.MILLISECONDS.toSeconds(millisecondsLeft - TimeUnit.HOURS.toMillis(TimeUnit.MILLISECONDS.toHours(millisecondsLeft)) - TimeUnit.MINUTES.toMillis(TimeUnit.MILLISECONDS.toMinutes(millisecondsLeft - TimeUnit.HOURS.toMillis(TimeUnit.MILLISECONDS.toHours(millisecondsLeft)))))
+        //TimeUnit.MILLISECONDS.toMinutes(millisecondsLeft) % TimeUnit.HOURS.toMinutes(1),
+        //TimeUnit.MILLISECONDS.toSeconds(millisecondsLeft) % TimeUnit.MINUTES.toSeconds(1)
+    )
+}
+
+//private suspend fun updateTimeLeft(timeLeft: MutableStateFlow<String>) {
+    //while ()
+//}
 
 
 

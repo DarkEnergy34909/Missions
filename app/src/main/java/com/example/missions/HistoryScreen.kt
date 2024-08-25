@@ -51,7 +51,7 @@ fun HistoryScreen(
             items(previousMissions) { mission ->
                 MissionCard(
                     mission = mission,
-                    date = if (mission.completed) {"Completed ${mission.dateCompleted}"} else if (mission.failed) {"Failed ${mission.dateCompleted}"} else {"Wtf: "},
+                    date = if (mission.completed) {"Completed\n${convertToNormalDate(mission.dateCompleted)}"} else if (mission.failed) {"Failed\n${convertToNormalDate(mission.dateCompleted)}"} else {"Wtf: "},
                     previous = true,
                     modifier = Modifier
                 )

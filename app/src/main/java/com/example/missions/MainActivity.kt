@@ -2,6 +2,7 @@ package com.example.missions
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -18,14 +19,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.datastore.preferences.preferencesDataStore
+import androidx.lifecycle.lifecycleScope
 import androidx.work.WorkInfo
 import androidx.work.WorkManager
+import com.example.missions.data.DataSource
 import com.example.missions.data.MissionRepository
 import com.example.missions.data.UserPreferencesRepository
 import com.example.missions.data.UserPreferencesRepositorySingleton
 import com.example.missions.ui.theme.MissionsTheme
 import com.example.missions.workers.scheduleMissionChange
 import com.example.missions.workers.scheduleNotification
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 
 const val USER_PREFERENCE_NAME = "user_preferences"
 val Context.userPreferencesDataStore by preferencesDataStore(name = USER_PREFERENCE_NAME)
@@ -37,6 +42,17 @@ class MainActivity : ComponentActivity() {
         //WorkManager.getInstance(this).cancelAllWork()
         //WorkManager.getInstance(this).pruneWork()
         val missionRepository = MissionRepository(this)
+
+        lifecycleScope.launch {
+            if (missionRepository.isEmpty()) {
+                DataSource.addMissionsToDatabase(missionRepository)
+                Log.i("DATABASE_INIT", "Database populated")
+            }
+            else {
+                Log.i("DATABASE_INIT", "Database is not empty")
+            }
+        }
+
         val userPreferencesRepository = UserPreferencesRepositorySingleton.getInstance(this)
 
         enableEdgeToEdge()

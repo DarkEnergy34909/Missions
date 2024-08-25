@@ -20,10 +20,14 @@ class MissionRepository(context: Context) {
     }
 
     suspend fun getMission(id: Int): Mission {
-        if (id == -1) {
-            return Mission(id = -1, text = "No challenges available", difficulty = "Easy", completed = false, dateCompleted = "")
+        if (id == 0) {
+            return Mission(id = 0, text = "No challenges available", difficulty = "Easy", completed = false, dateCompleted = "")
         }
         return missionDao.getMission(id)
+    }
+
+    suspend fun isEmpty(): Boolean {
+        return missionDao.getAllMissions().isEmpty()
     }
 
     suspend fun getAllMissions(): List<Mission> {
@@ -37,12 +41,25 @@ class MissionRepository(context: Context) {
     suspend fun getCompletedMissions(): List<Mission> {
         return missionDao.getCompletedMissions()
     }
+
+    suspend fun getEasyMissions(): List<Mission> {
+        return missionDao.getEasyMissions()
+    }
+
+    suspend fun getMediumMissions(): List<Mission> {
+        return missionDao.getMediumMissions()
+    }
+
+    suspend fun getHardMissions(): List<Mission> {
+        return missionDao.getHardMissions()
+    }
+
 }
 
 suspend fun getNewMission(repository: MissionRepository): Mission {
     val missionList = repository.getUncompletedMissions()
     if (missionList.isEmpty()) {
-        return Mission(id = -1, text = "No challenges available", difficulty = "Easy", completed = false, dateCompleted = "")
+        return Mission(id = 0, text = "No challenges available", difficulty = "Easy", completed = false, dateCompleted = "")
     }
     return missionList[Random.nextInt(0, missionList.size)]
 }
