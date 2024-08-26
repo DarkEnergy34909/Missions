@@ -275,9 +275,9 @@ fun MissionScreen(
                     modifier = modifier
                 )
             }
-            /*composable(route = MissionScreens.More.name) {
+            composable(route = MissionScreens.More.name) {
                 MoreScreen()
-            }*/
+            }
         }
     }
 
@@ -481,7 +481,7 @@ fun NavigationBar(
                     )
                 }
             }
-            /*
+
             // More button
             IconButton(
                 onClick = {if (currentScreen != MissionScreens.More) {navController.navigate(MissionScreens.More.name)}},
@@ -502,7 +502,7 @@ fun NavigationBar(
                         modifier = Modifier.weight(1f)
                     )
                 }
-            }*/
+            }
         },
         contentPadding = PaddingValues(0.dp),
         modifier = Modifier

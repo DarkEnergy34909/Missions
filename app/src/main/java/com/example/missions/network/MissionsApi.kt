@@ -8,7 +8,7 @@ private const val BASE_URL = "http://192.168.1.136:5000"
 
 internal val retrofit = Retrofit.Builder()
     .addConverterFactory(ScalarsConverterFactory.create())
-    //.addConverterFactory(GsonConverterFactory.create())
+    .addConverterFactory(GsonConverterFactory.create())
     .baseUrl(BASE_URL)
     .build()
 

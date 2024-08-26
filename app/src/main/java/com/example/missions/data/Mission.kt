@@ -3,6 +3,7 @@ package com.example.missions.data
 import java.util.Date
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import java.io.Serializable
 
 @Entity(tableName = "missions")
 data class Mission(

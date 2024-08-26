@@ -1,23 +1,18 @@
 package com.example.missions
 
 import android.util.Log
-import android.widget.CheckBox
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -29,11 +24,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.missions.data.Mission
 import com.example.missions.data.MissionRepository
+import com.example.missions.data.PostMission
 import com.example.missions.network.MissionsApi
 import com.example.missions.ui.theme.MissionsTheme
 import kotlinx.coroutines.launch
@@ -113,6 +108,12 @@ fun AddScreen(
 
                             if (agree) {
                                 Log.i("POST_MISSION", "Agreed to post")
+                                try {
+                                    MissionsApi.retrofitService.postMission(PostMission(text = text, difficulty = difficulty))
+                                    Log.i("POST_MISSION", "Success")
+                                } catch (e: Exception) {
+                                    Log.e("POST_MISSION", "Error: ${e.message}")
+                                }
                             }
                             else {
                                 Log.i("POST_MISSION", "Did not agree to post")
@@ -120,17 +121,7 @@ fun AddScreen(
                         }
                         added = true
                     }
-                    /*if (agree) {
-                        scope.launch {
-                            try {
-                                MissionsApi.retrofitService.postMission(Mission(text = text, difficulty = difficulty))
-                                Log.i("POST_MISSION", "Success")
-                            } catch (e: Exception) {
-                                Log.e("POST_MISSION", "Error: ${e.message}")
-                            }
-                        }
-                    }
-
+                    /*
                     if (agree) {
                                 try {
                                     MissionsApi.retrofitService.postMission(Mission(text = text, difficulty = difficulty))
