@@ -27,7 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.missions.data.Mission
-import com.example.missions.data.MissionRepository
+import com.example.missions.data.repository.MissionRepository
 import com.example.missions.data.PostMission
 import com.example.missions.network.MissionsApi
 import com.example.missions.ui.theme.MissionsTheme

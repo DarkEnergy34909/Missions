@@ -6,30 +6,23 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.lifecycleScope
-import androidx.work.WorkInfo
-import androidx.work.WorkManager
 import com.example.missions.data.DataSource
-import com.example.missions.data.MissionRepository
-import com.example.missions.data.UserPreferencesRepository
-import com.example.missions.data.UserPreferencesRepositorySingleton
+import com.example.missions.data.repository.MissionRepository
+import com.example.missions.data.datastore.UserPreferencesRepository
+import com.example.missions.data.datastore.UserPreferencesRepositorySingleton
 import com.example.missions.ui.theme.MissionsTheme
 import com.example.missions.workers.scheduleMissionChange
 import com.example.missions.workers.scheduleNotification
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 
 const val USER_PREFERENCE_NAME = "user_preferences"

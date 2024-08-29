@@ -6,16 +6,13 @@ import androidx.work.CoroutineWorker
 import androidx.work.PeriodicWorkRequest
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
-import androidx.work.WorkRequest
 import androidx.work.WorkerParameters
 import com.example.missions.MissionStates
-import com.example.missions.data.MissionRepository
-import com.example.missions.data.UserPreferencesRepositorySingleton
-import com.example.missions.data.getNewMission
-import com.example.missions.getDate
+import com.example.missions.data.repository.MissionRepository
+import com.example.missions.data.datastore.UserPreferencesRepositorySingleton
+import com.example.missions.data.repository.getNewMission
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
-import java.sql.Time
 import java.util.concurrent.TimeUnit
 
 class NewMissionWorker(
@@ -31,22 +28,45 @@ class NewMissionWorker(
 
         val userPreferencesRepository = UserPreferencesRepositorySingleton.getInstance(context)
         val currentMissionId = userPreferencesRepository.missionIdFlow.firstOrNull()
+        val socialScore = userPreferencesRepository.socialScoreFlow.first()
         //val missionState = userPreferencesRepository.missionStateFlow.first()
 
         if (currentMissionId != null) {
             val currentMission = missionRepository.getMission(currentMissionId)
 
+            // If mission was failed
             if (!currentMission.completed) {
                 currentMission.failed = true
                 //currentMission.dateCompleted = getDate()
+
+                // If mission was failed, decrease score
+                if (socialScore >= 0.1f) {
+                    userPreferencesRepository.saveSocialScore(socialScore = socialScore - 0.1f)
+                }
+                else {
+                    userPreferencesRepository.saveSocialScore(socialScore = 0.0f)
+                }
+            }
+
+            // If mission was completed
+            else {
+                // If mission was completed, increase score
+                if (socialScore <= 0.9f) {
+                    userPreferencesRepository.saveSocialScore(socialScore = socialScore + 0.1f)
+                }
+                else {
+                    userPreferencesRepository.saveSocialScore(socialScore = 1.0f)
+                }
             }
 
             missionRepository.updateMission(currentMission)
 
             // TODO: Handle errors
-            val newMission = getNewMission(missionRepository)
+            //val newMission = getNewMission(missionRepository)
+            val newMission = missionRepository.getNewMission(context)
 
-            if (newMission.id != -1) {
+
+            if (newMission.id != 0) {
                 userPreferencesRepository.saveMissionId(missionId = newMission.id)
             }
         }

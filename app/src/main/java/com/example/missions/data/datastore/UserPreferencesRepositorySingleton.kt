@@ -1,4 +1,4 @@
-package com.example.missions.data
+package com.example.missions.data.datastore
 
 import android.content.Context
 import androidx.datastore.preferences.preferencesDataStore

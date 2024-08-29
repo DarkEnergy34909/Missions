@@ -1,12 +1,7 @@
 package com.example.missions
 
-import android.annotation.SuppressLint
-import android.content.Context
 import android.util.Log
-import android.widget.CheckBox
-import androidx.annotation.StringRes
 import androidx.compose.animation.animateContentSize
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -16,27 +11,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Checklist
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MoreHoriz
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -47,6 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -62,12 +50,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.dimensionResource
-import androidx.compose.ui.semantics.Role.Companion.Button
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
@@ -75,27 +61,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.example.missions.data.DataSource
 import com.example.missions.data.Mission
-import com.example.missions.data.MissionRepository
-import com.example.missions.data.UserPreferencesRepository
-import com.example.missions.data.getNewMission
+import com.example.missions.data.repository.MissionRepository
+import com.example.missions.data.datastore.UserPreferencesRepository
+import com.example.missions.data.repository.getNewMission
 import com.example.missions.ui.theme.MissionsTheme
 import com.example.missions.workers.getDelay
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Delay
 import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
-import java.util.Date
 import java.util.Locale
 import java.util.concurrent.TimeUnit
-import kotlin.random.Random
 
 enum class MissionStates() {
     MISSION_UNDEFINED,
@@ -107,7 +85,10 @@ enum class MissionScreens() {
     Home(),
     Add(),
     History(),
-    More()
+    More(),
+    Profile(),
+    LogIn(),
+    SignUp()
 }
 
 //const val USER_PREFERENCE_NAME = "user_preferences"
@@ -128,6 +109,8 @@ fun MissionScreen(
     //val userPreferencesRepository = remember { UserPreferencesRepository(context.userPreferencesDataStore) }
     val userStreak by userPreferencesRepository.streakFlow.collectAsStateWithLifecycle(initialValue = 0)
 
+    val socialScore by userPreferencesRepository.socialScoreFlow.collectAsStateWithLifecycle(initialValue = 0.0f)
+
     //val missionRepository = remember{ MissionRepository(context) }
 
     val missionState by userPreferencesRepository.missionStateFlow.collectAsStateWithLifecycle(initialValue = MissionStates.MISSION_UNDEFINED.ordinal)
@@ -145,22 +128,28 @@ fun MissionScreen(
 
     LaunchedEffect(lifecycleState) {
         delay(200)
+
+        Log.i("DATASTORE_VALUES", "User streak: $userStreak \nSocial score: $socialScore \nMission state: $missionState \nMission id: $currentMissionId")
+
         Log.e("MISSION_ID_FUN", currentMissionId.toString())
         if (currentMissionId == 0) {
             Log.e("MISSION_ID_FUN", "IF")
-            currentMission = getNewMission(missionRepository)
-            //currentMission.dateCompleted = getDate()
+            //currentMission = getNewMission(missionRepository)
+            currentMission = missionRepository.getNewMission(context)
+
             userPreferencesRepository.saveMissionId(missionId = currentMission.id)
 
-            if (currentMission.dateCompleted != getDate()) {
+            if (currentMission.dateCompleted != getDate() && missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
                 currentMission.dateCompleted = getDate()
                 missionRepository.updateMission(currentMission)
             }
+
         }
         else {
             Log.e("MISSION_ID_FUN", "ELSE")
             currentMission = missionRepository.getMission(currentMissionId)
-            if (currentMission.dateCompleted != getDate()) {
+
+            if (currentMission.dateCompleted != getDate() && missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
                 currentMission.dateCompleted = getDate()
                 missionRepository.updateMission(currentMission)
             }
@@ -177,7 +166,8 @@ fun MissionScreen(
                 Log.e("MISSION_ID_FUN", currentMissionId.toString())
                 if (currentMissionId == 0) {
                     Log.e("MISSION_ID_FUN", "IF")
-                    currentMission = getNewMission(missionRepository)
+                    //currentMission = getNewMission(missionRepository)
+                    currentMission = missionRepository.getNewMission(context)
                     userPreferencesRepository.saveMissionId(missionId = currentMission.id)
                 } else {
                     Log.e("MISSION_ID_FUN", "ELSE")
@@ -205,6 +195,8 @@ fun MissionScreen(
     Scaffold(
         topBar = {
             MissionAppBar(
+                navController = navController,
+                currentScreen = currentScreen,
                 canNavigateBack = false,
                 streak = userStreak
             )
@@ -243,6 +235,13 @@ fun MissionScreen(
                             userPreferencesRepository.saveMissionState(missionState = MissionStates.MISSION_COMPLETED.ordinal)
 
                             userPreferencesRepository.saveStreak(streak = userStreak + 1)
+
+                            if (socialScore <= 0.9f) {
+                                userPreferencesRepository.saveSocialScore(socialScore = socialScore + 0.1f)
+                            }
+                            else {
+                                userPreferencesRepository.saveSocialScore(socialScore = 1.0f)
+                            }
                         }
                                       },
 
@@ -256,6 +255,13 @@ fun MissionScreen(
                             userPreferencesRepository.saveMissionState(missionState = MissionStates.MISSION_FAILED.ordinal)
 
                             userPreferencesRepository.saveStreak(streak = 0)
+
+                            if (socialScore >= 0.1f) {
+                                userPreferencesRepository.saveSocialScore(socialScore = socialScore - 0.1f)
+                            }
+                            else {
+                                userPreferencesRepository.saveSocialScore(socialScore = 0.0f)
+                            }
                         }
                                   },
 
@@ -275,9 +281,27 @@ fun MissionScreen(
                     modifier = modifier
                 )
             }
-            composable(route = MissionScreens.More.name) {
+            /*composable(route = MissionScreens.More.name) {
                 MoreScreen()
+            }*/
+            /*composable(route = MissionScreens.Profile.name) {
+                ProfileScreen(
+                    navController = navController,
+                    modifier = modifier
+                )
+            }*/
+
+            /*composable(route = MissionScreens.LogIn.name) {
+                LoginScreen(
+                    modifier = modifier
+                )
             }
+
+            composable(route = MissionScreens.SignUp.name) {
+                SignUpScreen(
+                    modifier = modifier
+                )
+            }*/
         }
     }
 
@@ -295,6 +319,8 @@ fun HomeScreen(
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
+
+
     //val dateFormatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
     //val date = Calendar.getInstance().time
     //val dateInString = dateFormatter.format(date)
@@ -302,12 +328,6 @@ fun HomeScreen(
     var timeLeft by remember {mutableStateOf("")}
     //timeLeft.value = ""
 
-    LaunchedEffect(scope) {
-        while (true) {
-            timeLeft = getTimeLeft()
-            delay(1000)
-        }
-    }
 
     Column(
         verticalArrangement = Arrangement.Center,
@@ -325,8 +345,24 @@ fun HomeScreen(
             )
         }*/
 
+
+
         //Spacer(modifier = Modifier.size(256.dp))
         if (missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
+            LaunchedEffect(scope) {
+                while (true) {
+                    timeLeft = getTimeLeft()
+                    delay(1000)
+                }
+            }
+
+            /*LaunchedEffect(scope) {
+                delay(200)
+                if (currentMission.dateCompleted != getDate()) {
+                    currentMission.dateCompleted = getDate()
+                    repository.updateMission(currentMission)
+                }
+            }*/
 
             Text(
                 text = "Today's challenge:",
@@ -368,6 +404,8 @@ fun HomeScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MissionAppBar(
+    navController: NavHostController,
+    currentScreen: MissionScreens,
     streak: Int,
     canNavigateBack: Boolean,
     modifier: Modifier = Modifier
@@ -376,9 +414,9 @@ fun MissionAppBar(
         title = {
             Text(text = "Challenges")
         },
-        //colors = ,
+        //colors = TopAppBarDefaults.topAppBarColors(),
         modifier = modifier,
-        navigationIcon = {
+        navigationIcon = {/*
             if (canNavigateBack) {
                 IconButton(onClick = {}) {
                     Icon(
@@ -388,22 +426,19 @@ fun MissionAppBar(
                 }
             }
             else {
-                IconButton(onClick = {}) {
+                IconButton(onClick = {if (currentScreen != MissionScreens.Profile){navController.navigate(MissionScreens.Profile.name)}}) {
                     Icon(
                         imageVector = Icons.Filled.AccountCircle,
                         contentDescription = "Menu"
                     )
                 }
+                //Streak(days = streak)
             }
-        },
+        */},
         actions = {
-            //IconButton(onClick = {}) {
-                //Icon(
-                    //imageVector = Icons.Filled.Settings,
-                    //contentDescription = "Settings"
-                //)
-            //}
+
             Streak(days = streak)
+
         }
     );
 }
@@ -482,6 +517,30 @@ fun NavigationBar(
                 }
             }
 
+            /*
+            //Profile button
+            IconButton(
+                onClick = {if (currentScreen != MissionScreens.Profile) {navController.navigate(MissionScreens.Profile.name)}},
+                modifier = Modifier.weight(1f)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Person,
+                        contentDescription = "Profile",
+                        modifier = Modifier.weight(1f)
+                    )
+                    Text(
+                        text = "Profile",
+                        fontSize = 12.sp,
+                        modifier = Modifier.weight(1f)
+                    )
+                }
+            }
+            */
+
+            /*
             // More button
             IconButton(
                 onClick = {if (currentScreen != MissionScreens.More) {navController.navigate(MissionScreens.More.name)}},
@@ -502,7 +561,7 @@ fun NavigationBar(
                         modifier = Modifier.weight(1f)
                     )
                 }
-            }
+            }*/
         },
         contentPadding = PaddingValues(0.dp),
         modifier = Modifier
