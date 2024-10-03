@@ -50,7 +50,7 @@ fun ProfileScreen(
 
             Spacer(modifier = Modifier.height(96.dp))
 
-            Button(onClick = {/*navController.navigate("MissionScreens.SignUp.name")*/}) {
+            Button(onClick = {navController.navigate(MissionScreens.SignUp.name)}) {
                 Text("Sign up")
             }
 

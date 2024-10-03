@@ -60,14 +60,14 @@ fun MoreScreen(modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-                scope.launch{
+                /*scope.launch{
                     try {
                         MissionsApi.retrofitService.postUser(User(username, password))
                         displayedText = "User created"
                     } catch (e: Exception) {
                         displayedText = "Error: ${e.message}"
                     }
-                }
+                }*/
             }
         ) {
             Text("Sign up")

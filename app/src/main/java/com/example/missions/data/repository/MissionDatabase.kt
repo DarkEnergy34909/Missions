@@ -4,12 +4,14 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import com.example.missions.data.HistoryMission
 import com.example.missions.data.Mission
 
-@Database(entities = [Mission::class], version = 1, exportSchema = false)
+@Database(entities = [Mission::class, HistoryMission::class], version = 1, exportSchema = false)
 abstract class MissionDatabase: RoomDatabase() {
 
     abstract fun missionDao(): MissionDao
+    abstract fun historyMissionDao(): HistoryMissionDao
 
     companion object {
         @Volatile

@@ -2,6 +2,7 @@ package com.example.missions.data.repository
 
 import android.content.Context
 import androidx.compose.ui.platform.LocalContext
+import com.example.missions.data.HistoryMission
 import com.example.missions.data.Mission
 import com.example.missions.data.datastore.UserPreferencesRepositorySingleton
 import kotlinx.coroutines.flow.first
@@ -9,6 +10,7 @@ import kotlin.random.Random
 
 class MissionRepository(context: Context) {
     private val missionDao = MissionDatabase.getDatabase(context).missionDao()
+    private val historyMissionDao = MissionDatabase.getDatabase(context).historyMissionDao()
 
     suspend fun insertMission(mission: Mission) {
         missionDao.insert(mission)
@@ -24,7 +26,7 @@ class MissionRepository(context: Context) {
 
     suspend fun getMission(id: Int): Mission {
         if (id == 0) {
-            return Mission(id = 0, text = "No challenges available", difficulty = "Easy", completed = false, dateCompleted = "")
+            return Mission(id = 0, text = "No challenges available", difficulty = "Easy", dateCompleted = "")
         }
         return missionDao.getMission(id)
     }
@@ -41,8 +43,8 @@ class MissionRepository(context: Context) {
         return missionDao.getUncompletedMissions()
     }
 
-    suspend fun getCompletedMissions(): List<Mission> {
-        return missionDao.getCompletedMissions()
+    suspend fun getCompletedAndFailedMissions(): List<Mission> {
+        return missionDao.getCompletedAndFailedMissions()
     }
 
     private suspend fun getUncompletedEasyMissions(): List<Mission> {
@@ -63,7 +65,7 @@ class MissionRepository(context: Context) {
         val hardMissionList = getUncompletedHardMissions()
 
         if (easyMissionList.isEmpty() && mediumMissionList.isEmpty() && hardMissionList.isEmpty()) {
-            return Mission(id = 0, text = "No challenges available", difficulty = "Easy", completed = false, dateCompleted = "")
+            return Mission(id = 0, text = "No challenges available", difficulty = "Easy", dateCompleted = "")
         }
 
         val userPreferencesRepository = UserPreferencesRepositorySingleton.getInstance(context)
@@ -109,11 +111,29 @@ class MissionRepository(context: Context) {
                 }
             }
             else -> {
-                return Mission(id = 0, text = "Wtf", difficulty = "Easy", completed = false, dateCompleted = "")
+                return Mission(id = 0, text = "Wtf", difficulty = "Easy", dateCompleted = "")
             }
 
         }
 
+    }
+
+    // History mission stuff
+
+    suspend fun insertHistoryMission(historyMission: HistoryMission) {
+        historyMissionDao.insert(historyMission)
+    }
+
+    suspend fun updateHistoryMission(historyMission: HistoryMission) {
+        historyMissionDao.update(historyMission)
+    }
+
+    suspend fun deleteHistoryMission(historyMission: HistoryMission) {
+        historyMissionDao.delete(historyMission)
+    }
+
+    suspend fun getAllHistoryMissions(): List<HistoryMission> {
+        return historyMissionDao.getAllHistoryMissions()
     }
 
 }
@@ -121,7 +141,7 @@ class MissionRepository(context: Context) {
 suspend fun getNewMission(repository: MissionRepository): Mission {
     val missionList = repository.getUncompletedMissions()
     if (missionList.isEmpty()) {
-        return Mission(id = 0, text = "No challenges available", difficulty = "Easy", completed = false, dateCompleted = "")
+        return Mission(id = 0, text = "No challenges available", difficulty = "Easy", dateCompleted = "")
     }
     return missionList[Random.nextInt(0, missionList.size)]
 }

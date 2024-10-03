@@ -8,6 +8,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.example.missions.MissionStates
+import com.example.missions.data.HistoryMission
 import com.example.missions.data.repository.MissionRepository
 import com.example.missions.data.datastore.UserPreferencesRepositorySingleton
 import com.example.missions.data.repository.getNewMission
@@ -27,12 +28,25 @@ class NewMissionWorker(
         val missionRepository = MissionRepository(context)
 
         val userPreferencesRepository = UserPreferencesRepositorySingleton.getInstance(context)
-        val currentMissionId = userPreferencesRepository.missionIdFlow.firstOrNull()
+        val currentMissionId = userPreferencesRepository.missionIdFlow.first()
         val socialScore = userPreferencesRepository.socialScoreFlow.first()
+        val missionState = userPreferencesRepository.missionStateFlow.first()
         //val missionState = userPreferencesRepository.missionStateFlow.first()
 
-        if (currentMissionId != null) {
+
+        if (currentMissionId != 0) {
             val currentMission = missionRepository.getMission(currentMissionId)
+
+            if (missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
+                missionRepository.insertHistoryMission(
+                    HistoryMission(
+                        text = currentMission.text,
+                        difficulty = currentMission.difficulty,
+                        success = false,
+                        dateCompleted = currentMission.dateCompleted
+                    )
+                )
+            }
 
             // If mission was failed
             if (!currentMission.completed) {
@@ -71,7 +85,8 @@ class NewMissionWorker(
             }
         }
 
-        val missionState = userPreferencesRepository.missionStateFlow.first()
+
+        // If user left the mission
         if (missionState == MissionStates.MISSION_UNDEFINED.ordinal) {
             userPreferencesRepository.saveStreak(streak = 0)
         }

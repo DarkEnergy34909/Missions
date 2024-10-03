@@ -28,7 +28,7 @@ interface MissionDao {
     suspend fun getUncompletedMissions(): List<Mission>
 
     @Query("SELECT * FROM missions WHERE completed = true OR failed = true ORDER BY dateCompleted DESC")
-    suspend fun getCompletedMissions(): List<Mission>
+    suspend fun getCompletedAndFailedMissions(): List<Mission>
 
     @Query("SELECT * FROM missions WHERE difficulty = 'Easy' AND completed = false ORDER BY id")
     suspend fun getUncompletedEasyMissions(): List<Mission>

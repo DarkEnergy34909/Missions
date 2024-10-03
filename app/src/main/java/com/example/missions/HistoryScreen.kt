@@ -32,7 +32,19 @@ fun HistoryScreen(
     var previousMissions: List<Mission> by remember { mutableStateOf(listOf()) }
 
     LaunchedEffect(scope) {
-        previousMissions = repository.getCompletedMissions()
+        val historyMissions = repository.getAllHistoryMissions()
+        for (historyMission in historyMissions) {
+            previousMissions += Mission(
+                id = historyMission.id,
+                text = historyMission.text,
+                difficulty = historyMission.difficulty,
+                completed = historyMission.success,
+                failed = !historyMission.success,
+                dateCompleted = historyMission.dateCompleted
+            )
+        }
+
+        //previousMissions = repository.getCompletedAndFailedMissions()
     }
 
     //val previousMissions = remember{ repository.getCompletedMissions() }

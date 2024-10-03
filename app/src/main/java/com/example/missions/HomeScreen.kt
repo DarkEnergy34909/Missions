@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LocalFireDepartment
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.BottomAppBar
@@ -61,6 +62,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.missions.data.HistoryMission
 import com.example.missions.data.Mission
 import com.example.missions.data.repository.MissionRepository
 import com.example.missions.data.datastore.UserPreferencesRepository
@@ -117,7 +119,7 @@ fun MissionScreen(
 
     //var currentMission: Mission by remember {mutableStateOf(DataSource.missions[Random.nextInt(0, DataSource.missions.size)])}
 
-    var currentMission: Mission by remember {mutableStateOf(Mission(text = "Loading...", difficulty = "Easy", completed = false, dateCompleted = ""))}
+    var currentMission: Mission by remember {mutableStateOf(Mission(text = "Loading...", difficulty = "Easy", completed = false, failed = false, dateCompleted = ""))}
 
     val currentMissionId by userPreferencesRepository.missionIdFlow.collectAsStateWithLifecycle(initialValue = 0)
 
@@ -232,6 +234,15 @@ fun MissionScreen(
                         scope.launch{
                             missionRepository.updateMission(currentMission)
 
+                            missionRepository.insertHistoryMission(
+                                HistoryMission(
+                                    text = currentMission.text,
+                                    difficulty = currentMission.difficulty,
+                                    success = true,
+                                    dateCompleted = getDate()
+                                )
+                            )
+
                             userPreferencesRepository.saveMissionState(missionState = MissionStates.MISSION_COMPLETED.ordinal)
 
                             userPreferencesRepository.saveStreak(streak = userStreak + 1)
@@ -251,6 +262,15 @@ fun MissionScreen(
                         currentMission.dateCompleted = getDate()
                         scope.launch{
                             missionRepository.updateMission(currentMission)
+
+                            missionRepository.insertHistoryMission(
+                                HistoryMission(
+                                    text = currentMission.text,
+                                    difficulty = currentMission.difficulty,
+                                    success = false,
+                                    dateCompleted = getDate()
+                                )
+                            )
 
                             userPreferencesRepository.saveMissionState(missionState = MissionStates.MISSION_FAILED.ordinal)
 
@@ -284,24 +304,24 @@ fun MissionScreen(
             /*composable(route = MissionScreens.More.name) {
                 MoreScreen()
             }*/
-            /*composable(route = MissionScreens.Profile.name) {
+            composable(route = MissionScreens.Profile.name) {
                 ProfileScreen(
                     navController = navController,
                     modifier = modifier
                 )
-            }*/
+            }
 
             /*composable(route = MissionScreens.LogIn.name) {
                 LoginScreen(
                     modifier = modifier
                 )
-            }
+            }*/
 
             composable(route = MissionScreens.SignUp.name) {
-                SignUpScreen(
+                SignupScreen(
                     modifier = modifier
                 )
-            }*/
+            }
         }
     }
 
@@ -517,7 +537,7 @@ fun NavigationBar(
                 }
             }
 
-            /*
+
             //Profile button
             IconButton(
                 onClick = {if (currentScreen != MissionScreens.Profile) {navController.navigate(MissionScreens.Profile.name)}},
@@ -538,7 +558,7 @@ fun NavigationBar(
                     )
                 }
             }
-            */
+
 
             /*
             // More button
