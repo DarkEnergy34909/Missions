@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedTextField
@@ -18,7 +19,9 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.example.missions.data.User
 import com.example.missions.network.MissionsApi
@@ -31,6 +34,8 @@ fun SignupScreen(
     modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
+
+    var infoText by remember { mutableStateOf("") }
 
     var username by remember { mutableStateOf("") }
     var userExists by remember { mutableStateOf(false) }
@@ -91,7 +96,8 @@ fun SignupScreen(
                     /**/
                                 },
                 label = { Text("Password") },
-                visualTransformation = PasswordVisualTransformation()
+                visualTransformation = PasswordVisualTransformation(),
+                supportingText = { /*if (password.length < 8)*/ Text("") }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -113,9 +119,16 @@ fun SignupScreen(
                     if (password == confirmedPassword && password != "" && username != "" && email != "") {
                         scope.launch {
                             try {
-                                val response = MissionsApi.retrofitService.postUser(User(username, email, password))
+                                val response = MissionsApi.retrofitService.postSignup(User(username, email, password))
                                 Log.i("SIGNUP", "Response: $response")
-                                if (response == "username exists") {
+                                if (response == "signup success") {
+                                    signedUp = true
+                                    username = ""
+                                    email = ""
+                                    password = ""
+                                    confirmedPassword = ""
+                                }
+                                else if (response == "username exists") {
                                     userExists = true
                                     Log.e("SIGNUP", "Error: User already exists")
                                 }
@@ -124,15 +137,12 @@ fun SignupScreen(
                                     Log.e("SIGNUP", "Error: Email already exists")
                                 }
                                 else {
-                                    signedUp = true
-                                    username = ""
-                                    email = ""
-                                    password = ""
-                                    confirmedPassword = ""
+                                    Log.i("SIGNUP", "wtf")
                                 }
                             }
                             catch (e: Exception) {
                                 Log.e("SIGNUP", "Error: ${e.message}")
+                                infoText = "Error: ${e.message}"
                             }
                         }
                     }
@@ -140,6 +150,12 @@ fun SignupScreen(
             ) {
                 Text("Sign up")
             }
+
+            Text(
+                text = infoText,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(dimensionResource(R.dimen.padding_medium))
+            )
         }
     }
 

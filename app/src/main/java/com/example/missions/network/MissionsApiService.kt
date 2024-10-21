@@ -19,6 +19,10 @@ interface MissionsApiService {
     suspend fun postMission(@Body mission: PostMission): String
 
     @Headers("Content-Type: application/json")
-    @POST("/user")
-    suspend fun postUser(@Body user: User): String
+    @POST("/signup")
+    suspend fun postSignup(@Body user: User): String
+
+    @Headers("Content-Type: application/json")
+    @POST("/login")
+    suspend fun postLogin(@Body user: User): String
 }

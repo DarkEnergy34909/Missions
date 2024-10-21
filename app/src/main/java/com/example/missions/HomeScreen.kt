@@ -89,7 +89,7 @@ enum class MissionScreens() {
     History(),
     More(),
     Profile(),
-    LogIn(),
+    Login(),
     SignUp()
 }
 
@@ -311,11 +311,11 @@ fun MissionScreen(
                 )
             }
 
-            /*composable(route = MissionScreens.LogIn.name) {
+            composable(route = MissionScreens.Login.name) {
                 LoginScreen(
                     modifier = modifier
                 )
-            }*/
+            }
 
             composable(route = MissionScreens.SignUp.name) {
                 SignupScreen(
