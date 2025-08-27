@@ -12,6 +12,7 @@ import com.example.missions.data.HistoryMission
 import com.example.missions.data.repository.MissionRepository
 import com.example.missions.data.datastore.UserPreferencesRepositorySingleton
 import com.example.missions.data.repository.getNewMission
+import com.example.missions.getDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import java.util.concurrent.TimeUnit
@@ -77,9 +78,17 @@ class NewMissionWorker(
 
             // TODO: Handle errors
             //val newMission = getNewMission(missionRepository)
+
+            // Get new mission from database
             val newMission = missionRepository.getNewMission(context)
 
+            // Set the date of the new mission (to avoid app crashing if not opened for a day)
+            newMission.dateCompleted = getDate()
 
+            // Update the mission in the database
+            missionRepository.updateMission(newMission)
+
+            // Save the new mission id to user preferences (so the current mission can be retrieved)
             if (newMission.id != 0) {
                 userPreferencesRepository.saveMissionId(missionId = newMission.id)
             }
@@ -99,7 +108,7 @@ class NewMissionWorker(
 }
 
 fun scheduleMissionChange(context: Context) {
-    val initialDelay = getDelay(23, 59, 59)
+    val initialDelay = getDelay(24, 0, 0)
 
     val newMissionWorkRequest: PeriodicWorkRequest = PeriodicWorkRequestBuilder<NewMissionWorker>(24, TimeUnit.HOURS)
         .addTag("new_mission")

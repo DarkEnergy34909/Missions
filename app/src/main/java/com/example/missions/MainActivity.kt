@@ -1,11 +1,13 @@
 package com.example.missions
 
 import android.content.Context
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -14,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.lifecycleScope
 import com.example.missions.data.DataSource
@@ -29,6 +33,18 @@ const val USER_PREFERENCE_NAME = "user_preferences"
 val Context.userPreferencesDataStore by preferencesDataStore(name = USER_PREFERENCE_NAME)
 
 class MainActivity : ComponentActivity() {
+    private val REQUEST_CODE_NOTIFICATION_PERMISSION = 1
+
+    private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted: Boolean ->
+        if (isGranted) {
+            Log.i("PERMISSION", "Permission granted")
+            scheduleNotification(this)
+        }
+        else {
+            Log.i("PERMISSION", "Permission denied")
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -48,6 +64,10 @@ class MainActivity : ComponentActivity() {
 
         val userPreferencesRepository = UserPreferencesRepositorySingleton.getInstance(this)
 
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
+
         enableEdgeToEdge()
         setContent {
             MissionsTheme {
@@ -63,8 +83,10 @@ class MainActivity : ComponentActivity() {
 
             }
         }
-        scheduleNotification(this)
+        // Schedule mission change worker
         scheduleMissionChange(this)
+
+
     }
 
     override fun onResume() {

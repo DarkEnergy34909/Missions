@@ -119,6 +119,7 @@ fun MissionScreen(
 
     //var currentMission: Mission by remember {mutableStateOf(DataSource.missions[Random.nextInt(0, DataSource.missions.size)])}
 
+    // TODO: Change this to a flow
     var currentMission: Mission by remember {mutableStateOf(Mission(text = "Loading...", difficulty = "Easy", completed = false, failed = false, dateCompleted = ""))}
 
     val currentMissionId by userPreferencesRepository.missionIdFlow.collectAsStateWithLifecycle(initialValue = 0)
@@ -177,6 +178,9 @@ fun MissionScreen(
                 }
             }
         }
+
+        // Check if the mission has been updated and change the current mission
+
     }
 
 
@@ -881,7 +885,7 @@ fun convertToNormalDate(date: String): String {
 
 private fun getTimeLeft(): String {
 
-    val millisecondsLeft = getDelay(23, 59, 59)
+    val millisecondsLeft = getDelay(24, 0, 0)
 
     return String.format(
         Locale.getDefault(),

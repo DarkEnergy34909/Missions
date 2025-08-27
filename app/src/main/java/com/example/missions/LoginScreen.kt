@@ -75,9 +75,18 @@ fun LoginScreen(
                         try {
                             val response = MissionsApi.retrofitService.postLogin(User(username = "", email = email, password = password))
 
-                            if (response == "login success") {
+                            if (response.substring(0, 3) == "uid") {
+                                // Log the user in
                                 loggedIn = true
                                 Log.i("LOGIN", "Logged in")
+
+                                // Get the API key
+                                val apiKey = response.substring(3)
+
+                                Log.i("LOGIN", "API key: $apiKey")
+
+                                // TODO: Save the API key to SharedPreferences
+
                                 //TODO: Navigate to profile screen
                             }
                             else if (response == "incorrect password") {
@@ -91,6 +100,7 @@ fun LoginScreen(
                             }
                         } catch (e: Exception) {
                             Log.e("LOGIN", "Error: ${e.message}")
+                            infoText = "Error: ${e.message}"
                         }
 
                     }
